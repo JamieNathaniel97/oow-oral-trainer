@@ -1,0 +1,1525 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Study app for the MCA Deck OOW oral exam.">
+<meta name="theme-color" content="#eef3f6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b1117" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+  :root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); color-scheme: light; }
+  body { margin: 0; -webkit-text-size-adjust: 100%; }
+  img { max-width: 100%; }
+  [hidden] { display: none !important; }
+</style>
+<title>OOW Oral Trainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: phone-first study app; chart-paper surfaces with Admiralty-chart magenta as the accent,
+   a fixed bottom tab bar, and an always-dark "night horizon" panel for lights. */
+:root {
+  --bg: #eef3f6;          /* chart sea white */
+  --surface: #ffffff;
+  --sunk: #e2eaef;
+  --ink: #13222e;
+  --muted: #586a77;
+  --line: #cfdae1;
+  --accent: #a8137a;      /* Admiralty chart magenta */
+  --accent-ink: #ffffff;
+  --accent-soft: #f6e3f0;
+  --land: #efe1bd;        /* chart land buff */
+  --good: #1f7a4d; --good-soft: #dff1e7;
+  --warn: #9a6400; --warn-soft: #f8ecd2;
+  --bad: #b3261e;  --bad-soft: #f8e1df;
+  --night: #050a10; --night-line: #1d2b38; --night-ink: #8fa3b3;
+  --day-sky: #dbe7ef; --day-sea: #9fb8c8; --shape: #0b0f13;
+  --lt-white: #fffdf2; --lt-red: #ff3b30; --lt-green: #2fe26b; --lt-yellow: #ffd60a;
+  --display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --body: "Barlow", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", Consolas, "Courier New", monospace;
+  --tabbar-h: 64px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0b1117; --surface: #131c24; --sunk: #0f171e; --ink: #e2eaef; --muted: #8b9ca8;
+  --line: #24323e; --accent: #e467bd; --accent-ink: #1a0a14; --accent-soft: #3a1830;
+  --land: #3b3424; --good: #5fd39a; --good-soft: #143326; --warn: #f0b85a; --warn-soft: #3a2c12;
+  --bad: #ff8a80; --bad-soft: #3d1a18; --day-sky: #b9cad6; --day-sea: #7f98a8; color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --bg: #0b1117; --surface: #131c24; --sunk: #0f171e; --ink: #e2eaef; --muted: #8b9ca8;
+  --line: #24323e; --accent: #e467bd; --accent-ink: #1a0a14; --accent-soft: #3a1830;
+  --land: #3b3424; --good: #5fd39a; --good-soft: #143326; --warn: #f0b85a; --warn-soft: #3a2c12;
+  --bad: #ff8a80; --bad-soft: #3d1a18; --day-sky: #b9cad6; --day-sea: #7f98a8; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--ink); font: 400 16px/1.5 var(--body); }
+.wrap { max-width: 720px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 12px calc(var(--tabbar-h) + 28px); }
+header.top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  padding-block: 6px 14px; border-bottom: 1px solid var(--line); margin-bottom: 16px; }
+.brand { font: 700 26px/1 var(--display); letter-spacing: .02em; text-transform: uppercase; }
+.brand span { color: var(--accent); }
+.credit { font: 500 13px/1.2 var(--body); color: var(--muted); margin-top: 4px; letter-spacing: .02em; }
+.sub { font: 500 13px/1.3 var(--mono); color: var(--muted); }
+h2 { font: 600 24px/1.15 var(--display); margin: 0; text-wrap: balance; letter-spacing: .01em; }
+h3 { font: 600 19px/1.2 var(--display); margin: 0; text-wrap: balance; }
+.lead { color: var(--muted); margin: 4px 0 0; max-width: 62ch; }
+.stack { display: flex; flex-direction: column; gap: 14px; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.spread { display: flex; gap: 10px; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; min-width: 0; }
+.label { font: 600 12px/1 var(--body); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.mono { font-family: var(--mono); font-size: 14px; }
+.chips { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+.chip { flex: none; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px;
+  padding: 6px 12px; font: 500 14px/1 var(--body); cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+button { font: inherit; }
+.btn { border: 0; border-radius: 10px; padding: 12px 16px; font: 600 16px/1 var(--body); cursor: pointer;
+  background: var(--sunk); color: var(--ink); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); }
+.btn.good { background: var(--good-soft); color: var(--good); }
+.btn.warn { background: var(--warn-soft); color: var(--warn); }
+.btn.bad { background: var(--bad-soft); color: var(--bad); }
+.btn.block { width: 100%; }
+.btn:focus-visible, .chip:focus-visible, .opt:focus-visible, .tab:focus-visible, summary:focus-visible, input:focus-visible, textarea:focus-visible
+  { outline: 3px solid var(--accent); outline-offset: 2px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.stat { background: var(--sunk); border-radius: 10px; padding: 10px 12px; }
+.stat b { display: block; font: 700 24px/1.1 var(--display); font-variant-numeric: tabular-nums; }
+.stat small { color: var(--muted); font-size: 12px; }
+.q { font: 600 21px/1.3 var(--display); letter-spacing: .01em; margin: 0; text-wrap: pretty; }
+ul.points { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+.tip { background: var(--accent-soft); border-radius: 10px; padding: 10px 12px; font-size: 15px; }
+.tip b { color: var(--accent); }
+.tag { display: inline-block; font: 600 11px/1 var(--body); letter-spacing: .08em; text-transform: uppercase;
+  color: var(--accent); background: var(--accent-soft); padding: 5px 8px; border-radius: 6px; }
+/* Lights & shapes quiz */
+.scene { width: 100%; max-width: 100%; aspect-ratio: 5 / 3; border-radius: 12px; display: block; }
+.opts { display: grid; gap: 8px; }
+.opt { text-align: left; border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+  border-radius: 10px; padding: 12px 14px; font: 500 16px/1.35 var(--body); cursor: pointer; }
+.opt.right { background: var(--good-soft); border-color: var(--good); color: var(--ink); }
+.opt.wrong { background: var(--bad-soft); border-color: var(--bad); color: var(--ink); }
+.opt[disabled] { cursor: default; }
+.pattern { font: 500 28px/1 var(--mono); letter-spacing: .15em; text-align: center; padding: 22px 8px; color: var(--ink);
+  background: var(--sunk); border-radius: 12px; overflow-x: auto; white-space: nowrap; }
+.flash { animation: flash 1s steps(1) infinite; }
+@keyframes flash { 50% { opacity: .08; } }
+@media (prefers-reduced-motion: reduce) { .flash { animation: none; } }
+/* Flashcards */
+.card { min-height: 220px; display: flex; flex-direction: column; justify-content: center; gap: 12px; cursor: pointer; text-align: left; width: 100%;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 14px; padding: 22px 18px; font: inherit; }
+.card .front { font: 600 22px/1.3 var(--display); }
+.card .back { font-size: 17px; border-top: 1px dashed var(--line); padding-top: 12px; white-space: pre-line; }
+.boxes { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.box { text-align: center; background: var(--sunk); border-radius: 8px; padding: 8px 4px; }
+.box b { display: block; font: 700 20px/1 var(--display); font-variant-numeric: tabular-nums; }
+.box small { font-size: 11px; color: var(--muted); }
+/* Library */
+.search { width: 100%; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface);
+  color: var(--ink); font: 400 16px/1.2 var(--body); }
+details.entry { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+details.entry > summary { list-style: none; cursor: pointer; padding: 14px 16px; display: flex; gap: 10px; align-items: baseline; justify-content: space-between; }
+details.entry > summary::-webkit-details-marker { display: none; }
+details.entry > summary::after { content: "+"; font: 600 20px/1 var(--mono); color: var(--muted); }
+details.entry[open] > summary::after { content: "–"; }
+.entry-body { padding: 0 16px 16px; min-width: 0; }
+.entry-body p { margin: 0 0 10px; max-width: 65ch; }
+.entry-body ul { margin: 0 0 10px; padding-left: 20px; }
+.entry-body li { margin-bottom: 4px; }
+.tbl { overflow-x: auto; margin: 4px 0 12px; }
+table { border-collapse: collapse; font-size: 14px; min-width: 100%; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font: 600 12px/1.2 var(--body); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); background: var(--sunk); }
+td { font-variant-numeric: tabular-nums; }
+.lc { font-family: var(--mono); color: var(--accent); white-space: nowrap; }
+textarea { width: 100%; min-height: 84px; border: 1px solid var(--line); border-radius: 10px; padding: 10px; background: var(--surface);
+  color: var(--ink); font: 400 13px/1.4 var(--mono); }
+.muted { color: var(--muted); }
+.small { font-size: 14px; }
+.foot { margin-top: 28px; font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 12px; }
+/* Tab bar */
+nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; background: var(--surface); border-top: 1px solid var(--line);
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  padding: 6px max(8px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px)); }
+.tab { border: 0; background: none; color: var(--muted); display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 6px 2px; border-radius: 10px; cursor: pointer; font: 600 12px/1 var(--body); letter-spacing: .03em; }
+.tab svg { width: 24px; height: 24px; }
+.tab[aria-current="page"] { color: var(--accent); background: var(--accent-soft); }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(var(--tabbar-h) + 18px + env(safe-area-inset-bottom, 0px));
+  background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-size: 14px; z-index: 6; }
+@media (min-width: 640px) { .opts { grid-template-columns: 1fr 1fr; } }
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div><div class="brand">OOW <span>Oral</span> Trainer</div><div class="credit">Created by The Big Cheese</div></div>
+    <div class="sub">MCA Deck OOW (Unlimited) · study aid</div>
+  </header>
+
+  <main id="view"></main>
+
+  <p class="foot">Study aid written from COLREGs 1972 (as amended), SOLAS, MARPOL, STCW and IALA Region A. Check anything that matters against the current official text and your college notes. Works offline once opened. Progress is saved on this device only. Use <em>Backup</em> on the Cards tab to move it.</p>
+</div>
+
+<nav class="tabs" aria-label="Sections">
+  <button class="tab" data-view="oral"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v10H9l-5 4z"/><path d="M8 9h8M8 12h5"/></svg>Mock oral</button>
+  <button class="tab" data-view="lights"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="2.2"/><circle cx="6" cy="15" r="2.2"/><circle cx="18" cy="15" r="2.2"/><path d="M3 21h18"/></svg>Lights</button>
+  <button class="tab" data-view="cards"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="7" width="14" height="12" rx="2"/><path d="M7 7V5h14v12h-4"/></svg>Cards</button>
+  <button class="tab" data-view="library"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 4h6a2 2 0 0 1 2 2v14a2 2 0 0 0-2-2H4z"/><path d="M20 4h-6a2 2 0 0 0-2 2v14a2 2 0 0 1 2-2h6z"/></svg>Library</button>
+</nav>
+
+<script>
+/* ============================================================ CONTENT */
+
+const ORAL = [
+ // ---------- COLREGs scenarios
+ {t:"COLREGs", q:"You are the OOW at night and you see a masthead light and a green sidelight fine on your port bow, with a steady bearing. What is it, and what action would you take?",
+  a:["Power-driven vessel, under 50 m (one masthead light), showing her starboard side: she's crossing from port to starboard ahead of you, or on a converging course.",
+     "Steady bearing means risk of collision exists (Rule 7). She is on my port side, so I am the stand-on vessel (Rule 15/17).",
+     "Keep course and speed, monitor (radar/ARPA CPA & TCPA, compass bearings), call the Master per standing orders.",
+     "If she doesn't take action: five short blasts (Rule 34(d)), and I may take action (Rule 17(a)(ii)), but not alter to port for a vessel on my port side.",
+     "If collision can't be avoided by her action alone, I must take the best action to avoid it (Rule 17(b))."],
+  tip:"Name the rule numbers as you go. Examiners like 'Rule 17(a)(ii)' and 'Rule 17(c)'."},
+ {t:"COLREGs", q:"What does Rule 5 of the COLREGs require of every vessel?",
+  a:["Every vessel shall at all times maintain a proper look-out by sight and hearing, and by all available means appropriate in the prevailing circumstances and conditions.",
+     "Purpose: to make a full appraisal of the situation and of the risk of collision.",
+     "'All available means' includes radar, ARPA, AIS, VHF and listening on the bridge wing in fog."],
+  tip:"Mention that the OOW may be sole look-out in daylight only after assessing conditions (STCW A-VIII/2)."},
+ {t:"COLREGs", q:"Can you list the factors that must be taken into account when determining a safe speed under Rule 6?",
+  a:["All vessels: state of visibility; traffic density incl. concentrations of fishing vessels; manoeuvrability, especially stopping distance and turning ability; at night, background light (shore lights, own lights' back-scatter); state of wind, sea and current and proximity of navigational hazards; draught in relation to available depth.",
+     "Vessels with operational radar additionally: characteristics, efficiency and limitations of the radar; constraints of the range scale in use; effect of sea state, weather and interference on detection; small vessels, ice and floating objects may not be detected; the number, location and movement of vessels detected; more exact assessment of visibility possible with radar."],
+  tip:"Group them as 'all vessels' then 'with radar'. It shows structure."},
+ {t:"COLREGs", q:"How would you determine whether a risk of collision exists with another vessel?",
+  a:["Rule 7: use all available means; if in doubt, risk shall be deemed to exist.",
+     "Proper use of radar: long-range scanning for early warning and radar plotting or equivalent systematic observation.",
+     "Don't make assumptions on scanty information, especially scanty radar information.",
+     "Risk exists if the compass bearing of an approaching vessel does not appreciably change. It may still exist with an appreciable bearing change, particularly when approaching a very large vessel, a tow, or a vessel at close range."]},
+ {t:"COLREGs", q:"Under Rule 8, what makes the action you take to avoid a collision proper and effective?",
+  a:["Positive, made in ample time and with due regard to good seamanship.",
+     "Alterations of course and/or speed large enough to be readily apparent to another vessel observing visually or by radar. Avoid a succession of small alterations.",
+     "If there's sufficient sea room, alteration of course alone may be most effective, provided it's made in good time, is substantial and doesn't result in another close-quarters situation.",
+     "Action should result in passing at a safe distance. Check its effectiveness until the other vessel is finally past and clear.",
+     "If necessary, slacken speed or take all way off by stopping or reversing.",
+     "A vessel required not to impede shall take early action to allow sea room for the other."]},
+ {t:"COLREGs", q:"If you need to cross a Traffic Separation Scheme, what are your obligations?",
+  a:["Rule 10: avoid crossing lanes if possible; if obliged to cross, do so on a heading as nearly as practicable at right angles to the general direction of traffic flow (heading, not track).",
+     "Report to the VTS if required (e.g. CALDOVREP in the Dover Strait).",
+     "Rule 10 doesn't relieve any vessel of her obligation under other rules. If risk of collision develops, the steering and sailing rules apply.",
+     "Avoid anchoring in a TSS or near its terminations. Keep clear of the separation zone except in emergency, to avoid immediate danger, or when fishing in it.",
+     "Vessels under 20 m and sailing vessels shall not impede the safe passage of power-driven vessels following a lane. Fishing vessels shall not impede any vessel following a lane."],
+  tip:"Say 'heading at right angles', not 'course'. It's a classic trap."},
+ {t:"COLREGs", q:"How is an overtaking situation defined, and which vessel must keep clear?",
+  a:["Rule 13: a vessel coming up with another from a direction more than 22.5° abaft her beam, so that at night she'd see only the sternlight and neither sidelight.",
+     "The overtaking vessel keeps out of the way, notwithstanding any other rule (applies to sailing vessels too).",
+     "If in doubt whether you're overtaking, assume you are.",
+     "A later change in bearing doesn't make the overtaking vessel a crossing vessel. She stays responsible until finally past and clear."]},
+ {t:"COLREGs", q:"When does a head-on situation exist, and what should both vessels do?",
+  a:["Rule 14: two power-driven vessels meeting on reciprocal or nearly reciprocal courses involving risk of collision.",
+     "At night: masthead lights in line or nearly in line and/or both sidelights visible. By day: the corresponding aspect.",
+     "Each alters course to starboard so they pass port to port.",
+     "If in doubt, assume a head-on situation exists and act accordingly. One short blast when altering (Rule 34(a))."]},
+ {t:"COLREGs", q:"Can you explain the responsibilities between different types of vessel under Rule 18?",
+  a:["Power-driven vessel underway keeps out of the way of: NUC, RAM, vessel engaged in fishing, sailing vessel.",
+     "Sailing vessel keeps out of the way of: NUC, RAM, vessel engaged in fishing.",
+     "Vessel engaged in fishing keeps out of the way of: NUC, RAM (as far as possible).",
+     "Any vessel other than NUC or RAM shall, if circumstances permit, avoid impeding a vessel constrained by her draught showing Rule 28 signals. A CBD vessel navigates with particular caution.",
+     "Seaplanes and WIG craft on the water keep well clear and avoid impeding; a WIG craft on the water complies with the rules as a power-driven vessel."],
+  tip:"A ladder works well: NUC/RAM at the top, then fishing, then sail, then power."},
+ {t:"COLREGs", q:"In restricted visibility you detect a vessel by radar alone, 6 miles away and fine on your starboard bow, and she is closing. What would you do?",
+  a:["Rule 19 applies (vessels not in sight of one another). Proceed at safe speed, engines ready for immediate manoeuvre, fog signals sounding, extra look-out, Master called.",
+     "Determine whether a close-quarters situation is developing and/or risk of collision exists (ARPA CPA/TCPA, systematic plotting).",
+     "If so, take avoiding action in ample time. Rule 19(d): avoid an alteration to port for a vessel forward of the beam (other than one being overtaken), and avoid altering towards a vessel abeam or abaft the beam.",
+     "So here: a bold alteration to starboard, and/or reduce speed.",
+     "Rule 19(e): on hearing a fog signal apparently forward of the beam, or unable to avoid close quarters with a vessel forward of the beam, reduce speed to the minimum to keep on course, take all way off if necessary, and navigate with extreme caution until danger is over."],
+  tip:"In Rule 19 there's no stand-on or give-way. Every vessel takes action."},
+ {t:"COLREGs", q:"When two sailing vessels are approaching each other, which one must give way?",
+  a:["Rule 12: different tacks: the vessel with the wind on the port side keeps out of the way.",
+     "Same tack: the windward vessel keeps out of the way of the leeward vessel.",
+     "If a vessel with the wind on the port side sees a vessel to windward and can't determine her tack, she keeps out of the way.",
+     "Windward side = the side opposite to that on which the mainsail is carried (largest fore-and-aft sail on a square-rigger)."]},
+ {t:"COLREGs", q:"What does Rule 9 require of vessels navigating in a narrow channel?",
+  a:["Keep as near to the outer limit of the channel on your starboard side as is safe and practicable.",
+     "Vessels under 20 m and sailing vessels shall not impede a vessel that can safely navigate only within the channel.",
+     "Fishing vessels shall not impede any other vessel navigating within the channel.",
+     "Don't cross a channel if it impedes a vessel that can only navigate within it. Five short blasts may be used if in doubt of a crossing vessel's intentions.",
+     "Overtaking where the overtaken vessel must act: two prolonged + one short (starboard side) or two prolonged + two short (port side). Agreement: prolonged, short, prolonged, short.",
+     "Approaching a bend or obstruction: one prolonged blast, answered by one prolonged. Avoid anchoring in a narrow channel."]},
+ {t:"COLREGs", q:"Can you explain what Rule 2, Responsibility, means for the OOW?",
+  a:["Nothing in the Rules exonerates any vessel, owner, master or crew from the consequences of neglect to comply with the Rules, or of neglecting any precaution required by the ordinary practice of seamen or the special circumstances of the case.",
+     "Due regard shall be had to all dangers of navigation and collision and any special circumstances, including the limitations of the vessels involved, which may make a departure from the Rules necessary to avoid immediate danger."]},
+ {t:"COLREGs", q:"What is meant by a vessel restricted in her ability to manoeuvre, and can you give some examples?",
+  a:["Rule 3(g): a vessel which, from the nature of her work, is restricted in her ability to manoeuvre as required by the Rules and so can't keep out of the way.",
+     "Examples: laying, servicing or picking up a navigation mark, submarine cable or pipeline; dredging, surveying or underwater operations; replenishment or transferring people, provisions or cargo while underway; launching or recovering aircraft; mine clearance; a towing operation that severely restricts the towing vessel and her tow from deviating from their course.",
+     "Compare NUC (Rule 3(f)): unable to manoeuvre through some exceptional circumstance, e.g. steering or main engine failure."]},
+
+ // ---------- Watchkeeping
+ {t:"Watchkeeping", q:"When you are taking over the watch, what would you check before accepting it?",
+  a:["Master's standing orders and night orders, and any special instructions.",
+     "Position, course, speed and draught; planned route and next waypoints/alterations.",
+     "Tides, currents, weather, visibility, and their effect on course and speed.",
+     "Navigational hazards ahead and traffic around (visual, radar, AIS).",
+     "Status of navigation and safety equipment, gyro/magnetic compass errors, any alarms or defects.",
+     "Any operations in progress (cargo, ballast, deck work, personnel aloft or in enclosed spaces).",
+     "Eyes fully adjusted to the light conditions.",
+     "Don't take over if the relieved officer is in the middle of a manoeuvre or avoiding action. Wait until it's complete. Don't hand over to someone who appears unfit for duty; inform the Master."]},
+ {t:"Watchkeeping", q:"In what circumstances must the OOW call the Master?",
+  a:["Restricted visibility encountered or expected.",
+     "Traffic conditions or the movements of other ships causing concern.",
+     "Difficulty in maintaining course.",
+     "Failure to sight land, a navigation mark or obtain soundings by the expected time; or unexpected sighting of land/mark or change in soundings.",
+     "Breakdown of engines, propulsion control, steering gear, or any essential navigation equipment, alarm or indicator.",
+     "Radio equipment malfunction.",
+     "Heavy weather where there's doubt about possible weather damage.",
+     "Hazards to navigation such as ice or a derelict.",
+     "Any other emergency, or whenever in any doubt."],
+  tip:"From STCW Code A-VIII/2. Finish with 'or in any doubt'."},
+ {t:"Watchkeeping", q:"If the Master comes onto the bridge during your watch, who has the con?",
+  a:["The OOW remains responsible for the watch until the Master informs them specifically that he or she has taken over, and that is mutually understood.",
+     "Record the time of handover of the con in the logbook. The OOW then continues to assist (look-out, plotting, fixing)."]},
+ {t:"Watchkeeping", q:"What are the minimum hours of rest required for watchkeepers?",
+  a:["STCW / MLC: at least 10 hours rest in any 24-hour period and 77 hours in any 7-day period.",
+     "Rest may be divided into no more than two periods, one of which is at least 6 hours long. The interval between consecutive rest periods shouldn't exceed 14 hours.",
+     "Drills and musters should be conducted in a way that minimises disturbance of rest periods.",
+     "Records of hours of rest must be kept and be available for inspection."]},
+ {t:"Watchkeeping", q:"During your watch the visibility starts to close in. What actions would you take?",
+  a:["Call the Master (standing orders).",
+     "Comply with Rule 19: safe speed, engines on standby for immediate manoeuvre (inform the engine room).",
+     "Sound fog signals (Rule 35). Exhibit navigation lights.",
+     "Post an additional look-out, including a bow look-out if appropriate. Put a helmsman on and change to hand steering.",
+     "Both radars on, appropriate ranges, systematic plotting/ARPA. Increase position-fixing frequency.",
+     "Close watertight doors, silence on deck to listen. Keep a VHF watch.",
+     "Log the time and actions."]},
+
+ // ---------- Navigation
+ {t:"Navigation", q:"Can you talk me through the stages of passage planning?",
+  a:["IMO Resolution A.893(21) / SOLAS V/34: Appraisal, Planning, Execution, Monitoring (APEM).",
+     "Appraisal: gather information: charts (ENC/paper) corrected to date, Sailing Directions, List of Lights, ALRS (radio signals), tide tables and tidal stream atlases, Notices to Mariners, NAVAREA/NAVTEX warnings, routeing charts, Ocean Passages for the World, Guide to Port Entry, ship's particulars (draught, squat, manoeuvring data), UKC policy, weather.",
+     "Planning: lay off the route berth to berth; no-go areas, safety contour; margins of safety; parallel indexes, clearing lines/bearings; wheel-over points; abort points and contingency anchorages; reporting points and VTS; tidal windows; speed plan.",
+     "Execution: ETA, tidal and daylight considerations, traffic, crew briefing, Master's approval.",
+     "Monitoring: fix the position at suitable intervals by more than one method, check cross-track error, keep checking the plan against reality."]},
+ {t:"Navigation", q:"How would you check the gyro compass error while at sea?",
+  a:["Each watch and after any major course alteration if possible.",
+     "Methods: azimuth of a celestial body (sun, star) using tables/calculator; amplitude of the sun at theoretical rising/setting; transit bearings of charted objects in coastal waters; comparison of a leading line with its charted bearing.",
+     "Record the error in the compass error book and apply it to bearings and courses. Compare gyro and magnetic compass and derive the deviation."],
+  tip:"'Error east, compass least; error west, compass best' for converting compass to true."},
+ {t:"Navigation", q:"Which ECDIS settings are the most important, and what are the limitations of ECDIS?",
+  a:["Safety contour (based on draught + squat + UKC policy), safety depth, shallow and deep contours. Look-ahead/anti-grounding zone. Alarms (cross-track, approach to safety contour, waypoint, position source loss). Correct display category (Standard/All).",
+     "Check the chart status: official ENCs up to date with weekly updates. In RCDS mode (raster charts) you need an appropriate folio of paper charts.",
+     "Limitations: over-reliance; data quality (CATZOC zones of confidence); position source error (GNSS jamming or spoofing); cluttered display; alarm fatigue; scale effects when overscaled; route checking not done or ignored.",
+     "Cross-check the position with independent means: radar ranges and bearings, parallel indexing, visual fixes."]},
+ {t:"Navigation", q:"Can you describe the cardinal marks used in IALA Region A?",
+  a:["Two black cones topmark, colours black and yellow, white light (quick or very quick flashing). The mark is placed in the named quadrant from the danger: pass on that side.",
+     "North: cones pointing up, black above yellow, Q or VQ continuous.",
+     "East: cones base-to-base, black with a yellow band, Q(3) 10s or VQ(3) 5s.",
+     "South: cones pointing down, yellow above black, Q(6)+LFl 15s or VQ(6)+LFl 10s.",
+     "West: cones point-to-point, yellow with a black band, Q(9) 15s or VQ(9) 10s."],
+  tip:"Clock face: E = 3 o'clock, S = 6, W = 9. South gets a long flash so it isn't mistaken for 3 or 9."},
+ {t:"Navigation", q:"What is the difference between a sea-stabilised and a ground-stabilised radar display, and when would you use each?",
+  a:["Sea stabilised (water-track input from the log): true vectors show the other vessel's heading through the water, i.e. her aspect. Use for collision avoidance and the application of COLREGs.",
+     "Ground stabilised (GNSS/bottom-track input): vectors show course and speed over the ground. Use for navigation, e.g. parallel indexing and tracking relative to land.",
+     "In a strong current, a ground-stabilised display can show a vessel's apparent aspect wrongly, leading to the wrong rule being applied."]},
+ {t:"Navigation", q:"How would you go about anchoring the ship?",
+  a:["Plan: choose an anchorage from charts and Sailing Directions; holding ground, depth, swinging room, shelter, traffic, cables/pipelines. Brief the anchor party and inform the engine room.",
+     "Approach at slow speed, heading into the wind/tide (whichever has more effect), with the anchor cleared away (walked back to just above the water if deep).",
+     "Let go when the ship is stopped over the ground or making slight sternway. Pay out cable as she drops back, typically 4–6 times the depth depending on weather, then hold and confirm the anchor is holding (cable leading well, bearings steady).",
+     "Exhibit anchor lights/ball, record position and swinging circle, and set up an anchor watch (GNSS anchor alarm, radar ranges, visual bearings). Report to the VTS if required."],
+  tip:"One shackle = 15 fathoms = 27.5 m."},
+ {t:"Navigation", q:"If you are approaching a tropical revolving storm in the Northern Hemisphere, how would you work out where you are in relation to it, and what would you do?",
+  a:["Warning signs: unusual swell, pressure 3 mb or more below the seasonal mean (allowing for diurnal variation), cirrus, oppressive weather, increasing wind. Buys Ballot's law: face the wind, low pressure is on your right (NH).",
+     "Wind veering: in the dangerous semicircle (right-hand side of the track in NH). Backing: navigable semicircle. Steady direction with falling pressure: in or near the path.",
+     "Dangerous semicircle: put the wind 10–45° on the starboard bow and proceed at best speed, altering to starboard as the wind veers.",
+     "Navigable semicircle or in the path: put the wind on the starboard quarter and proceed at best speed, altering to port as the wind backs.",
+     "SOLAS V/31: report to ships nearby and the nearest coast station (danger message). Southern Hemisphere: everything is reversed (port instead of starboard)."]},
+
+ // ---------- Emergencies
+ {t:"Emergencies", q:"In the event of a man overboard during your watch, what immediate actions would you take?",
+  a:["Shout 'Man overboard (side)', release the MOB lifebuoy (light and smoke) on that side, and keep someone pointing at the person at all times.",
+     "Helm hard over to the side the person fell, to swing the stern and propeller clear. Press the MOB button on GNSS/ECDIS.",
+     "Sound the alarm: three prolonged blasts (signal 'O'), hoist flag O, inform the Master and the engine room (standby), muster the rescue boat crew.",
+     "Begin a recovery manoeuvre: Williamson turn (immediate action, or person not in sight), Anderson turn (fastest if the person is in sight), Scharnow turn (delayed action, returns to own wake).",
+     "Broadcast a distress or urgency alert as appropriate (DSC/VHF) and warn shipping. Post look-outs, prepare the rescue boat, medical team and recovery equipment. Log everything."]},
+ {t:"Emergencies", q:"Can you describe how to carry out a Williamson turn?",
+  a:["Rudder hard over (towards the side of the person if it's an immediate-action situation).",
+     "When the heading has altered 60° from the original course, rudder hard over to the opposite side.",
+     "When the heading is about 20° short of the reciprocal course, rudder amidships and steady on the reciprocal.",
+     "The ship returns along her original track. It's good at night or in poor visibility, but slow and takes the ship away from the person initially."],
+  tip:"The '60°' and '20° short' figures vary with the ship; check her manoeuvring data."},
+ {t:"Emergencies", q:"A fire is reported in the accommodation during your watch. What would you do?",
+  a:["Sound the general/fire alarm, announce the location, inform the Master. Muster the fire parties per the muster list.",
+     "Engine room on standby. Consider altering course and speed to put the fire downwind and reduce draught through the ship.",
+     "Stop ventilation to the area. Close fire doors, dampers and openings (containment). Boundary cooling of adjacent bulkheads and decks.",
+     "Headcount and search and rescue (BA teams). Identify the fire class and use the right extinguishing media. Isolate electrics.",
+     "Prepare LSA in case of escalation. Send an urgency or distress message if needed. Keep the bridge watch and navigation going. Record events."],
+  tip:"Fire tetrahedron: fuel, heat, oxygen, chain reaction. Every action removes one of them."},
+ {t:"Emergencies", q:"In the event that your ship runs aground, what actions would you take?",
+  a:["Stop engines. Sound the general alarm. Inform the Master. Close watertight doors.",
+     "Exhibit aground lights/shapes (Rule 30) and sound the aground signal if in restricted visibility.",
+     "Check for damage: sound all tanks, bilges and void spaces; look for water ingress and pollution.",
+     "Take soundings around the hull to find where she's aground. Establish the state of tide and weather.",
+     "Don't go astern immediately: it could worsen damage, cause flooding or pollution, or lose a stable position.",
+     "Fix and record the position. Send an urgency/distress message as appropriate, inform the company/DPA, and implement SOPEP if there's pollution. Consider ballast transfer to refloat, or await tugs/salvage. Save VDR data."]},
+ {t:"Emergencies", q:"If your ship has been involved in a collision, what actions would you take?",
+  a:["General alarm. Inform the Master. Manoeuvre to minimise damage. If embedded in the other vessel, consider keeping slow ahead to stay plugged rather than pulling free.",
+     "Close watertight doors. Assess damage, flooding and stability. Check for casualties, fire and pollution.",
+     "Distress or urgency message as appropriate. Stand by to assist the other vessel.",
+     "The Master is required to give the other vessel the ship's name, port of registry, and ports of departure and destination (Merchant Shipping Act / SOLAS obligations to render assistance).",
+     "Save VDR data, record everything in the logbook, and report to the company and flag state (MAIB in the UK)."]},
+ {t:"Emergencies", q:"If the steering fails while the ship is underway, what would you do?",
+  a:["Inform the Master and engine room. Engines on standby; reduce speed as appropriate.",
+     "Change over to the other steering motor/pump, or non-follow-up (NFU) or emergency steering mode. If needed, emergency steering from the steering gear room with communication to the bridge.",
+     "Exhibit NUC lights/shapes. Sound signals if appropriate. Warn other traffic (VHF, Sécurité or urgency message).",
+     "Consider anchoring if in shallow water near danger. Consult the ship-specific emergency steering procedure displayed on the bridge and in the steering gear room.",
+     "SOLAS V/26: emergency steering drills at least every three months."]},
+ {t:"Emergencies", q:"If the Master gives the order to abandon ship, how would it be carried out?",
+  a:["The order comes from the Master. General emergency alarm (seven or more short blasts followed by one long blast), then the order to abandon ship.",
+     "Send a distress alert (DSC/MAYDAY) with position. Take the EPIRB, SARTs and portable VHFs into the survival craft.",
+     "Dress warmly, with lifejackets and immersion suits. Muster at assigned stations, headcount.",
+     "Launch lifeboats/liferafts per drills. Board dry if possible. Clear the ship's side and stay together.",
+     "In the craft: cut, stream (sea anchor), close, maintain: seasickness tablets, look-out, ration water, use TPAs, activate SART when appropriate."]},
+ {t:"Emergencies", q:"Can you give me an example of how you would construct a MAYDAY message?",
+  a:["MAYDAY, MAYDAY, MAYDAY.",
+     "This is (ship's name ×3, call sign, MMSI).",
+     "MAYDAY (ship's name, call sign, MMSI).",
+     "Position (lat/long or bearing and distance from a known point).",
+     "Nature of distress, and assistance required.",
+     "Number of persons on board, and any other useful information (intentions, abandoning, weather).",
+     "OVER.",
+     "Precede it with a DSC distress alert (VHF ch 70 / MF 2187.5 kHz) where fitted, then voice on ch 16 / 2182 kHz."],
+  tip:"MIPDANIO: MMSI, Identity, Position, Distress, Assistance, Number, Information, Over."},
+
+ // ---------- Safety & LSA
+ {t:"Safety & LSA", q:"How often must emergency drills be held on board a cargo ship?",
+  a:["SOLAS III/19: every crew member takes part in at least one abandon-ship drill and one fire drill every month.",
+     "Drills take place within 24 hours of leaving port if more than 25% of the crew haven't taken part in drills on board that ship in the previous month.",
+     "Each lifeboat is launched with its assigned operating crew aboard and manoeuvred in the water at least once every three months.",
+     "Rescue boats launched each month where reasonable and practicable, and at least once every three months.",
+     "Enclosed space entry and rescue drills at least every two months. Emergency steering drills every three months (SOLAS V/26).",
+     "Emergency lighting for mustering and abandonment is tested at each abandon-ship drill. Record drills in the logbook."]},
+ {t:"Safety & LSA", q:"If the ship sinks, how does a liferaft float free and inflate?",
+  a:["The liferaft painter is attached to the ship via a weak link on the hydrostatic release unit (HRU).",
+     "Water pressure at about 2–4 m depth operates the HRU, releasing the raft container, which floats to the surface.",
+     "As the ship sinks, the painter pulls tight, triggering inflation. The weak link then breaks, freeing the inflated raft.",
+     "HRUs are serviced or replaced per the manufacturer (disposable types typically every 2 years). Liferafts are serviced at intervals not exceeding 12 months."]},
+ {t:"Safety & LSA", q:"What are the SOLAS requirements for lifebuoys on board?",
+  a:["Distributed so they're readily available on both sides of the ship and on all open decks extending to the ship's side, with at least one near the stern.",
+     "At least half fitted with self-igniting lights. At least two with self-activating smoke signals and lights, capable of quick release from the bridge (MOB markers).",
+     "At least one each side fitted with a buoyant lifeline at least twice the height of stowage above the lightest seagoing waterline, or 30 m, whichever is greater.",
+     "Marked with the ship's name and port of registry in block capitals."]},
+ {t:"Safety & LSA", q:"What precautions must be taken before anyone enters an enclosed space?",
+  a:["Treat every enclosed space as dangerous. Permit to work signed by a responsible officer, with a risk assessment.",
+     "Isolate (pipelines, power) and ventilate thoroughly. Test the atmosphere: oxygen 20.9% (21%), flammable gas below 1% LFL, toxic gases (H2S, CO, etc.) below occupational exposure limits. Test at different levels.",
+     "An attendant stays at the entrance in communication. Rescue equipment and BA ready at the entrance. Continuous monitoring with personal gas detectors.",
+     "Inform the bridge. Agreed communication intervals. Never enter to attempt a rescue without BA."]},
+ {t:"Safety & LSA", q:"What does the ISM Code require, and what are its key documents?",
+  a:["The International Safety Management Code (SOLAS IX): the company establishes a Safety Management System (SMS) covering safety and environmental protection policy, procedures, emergency preparedness, reporting of accidents and non-conformities, maintenance, and internal audits.",
+     "Designated Person Ashore (DPA): direct link between the ship and top management.",
+     "Document of Compliance (DOC) is issued to the company; Safety Management Certificate (SMC) is issued to the ship. Both are valid for 5 years, with verification (the SMC has an intermediate verification).",
+     "The Master's overriding authority and responsibility to make decisions for safety and pollution prevention."]},
+ {t:"Safety & LSA", q:"What is the ISPS Code, and what are the three security levels?",
+  a:["International Ship and Port Facility Security Code (SOLAS XI-2), after 9/11.",
+     "Roles: Ship Security Officer (SSO), Company Security Officer (CSO), Port Facility Security Officer (PFSO). Ship Security Plan (SSP) approved by the flag. International Ship Security Certificate (ISSC).",
+     "Level 1: normal, minimum protective measures at all times. Level 2: heightened, additional measures due to increased risk. Level 3: exceptional, specific measures when an incident is probable or imminent.",
+     "Ship Security Alert System (SSAS): covert alert to the company/flag. Declaration of Security when ship and port are at different levels or by request."]},
+
+ // ---------- Pollution
+ {t:"Pollution", q:"Can you name the six annexes of MARPOL?",
+  a:["Annex I: Oil.", "Annex II: Noxious liquid substances in bulk.", "Annex III: Harmful substances in packaged form.",
+     "Annex IV: Sewage.", "Annex V: Garbage.", "Annex VI: Air pollution (SOx, NOx, ozone-depleting substances, energy efficiency)."],
+  tip:"'Old Nasty Hamsters Sing Grim Anthems': Oil, Noxious, Harmful, Sewage, Garbage, Air."},
+ {t:"Pollution", q:"Under what conditions can oily water from the machinery spaces be discharged overboard?",
+  a:["MARPOL Annex I (ships of 400 GT and above): ship en route; oily mixture processed through approved oil filtering equipment; oil content of the effluent without dilution not exceeding 15 ppm; the mixture not from cargo pump-room bilges on tankers or mixed with cargo residues.",
+     "Not in the Antarctic area. Special-area conditions apply elsewhere.",
+     "The 15 ppm alarm stops the discharge automatically. Record operations in Oil Record Book Part I."]},
+ {t:"Pollution", q:"Which types of garbage can be discharged overboard, and where is this allowed?",
+  a:["Plastics, including synthetic ropes and fishing gear: never, anywhere.",
+     "Outside special areas: food waste at least 12 nm from nearest land (or 3 nm if comminuted to 25 mm or less); cargo residues not harmful to the marine environment at least 12 nm; animal carcasses as far as possible from land.",
+     "Special areas (e.g. Mediterranean, Baltic, North Sea, Black Sea, Red Sea, Gulfs, Wider Caribbean, Antarctic): stricter: food waste only, at least 12 nm, comminuted.",
+     "Garbage Management Plan (ships of 100 GT+ or certified for 15+ persons), Garbage Record Book (400 GT+), placards on ships of 12 m and over."]},
+ {t:"Pollution", q:"What is a SOPEP, and what does it contain?",
+  a:["Shipboard Oil Pollution Emergency Plan (MARPOL Annex I, Reg 37): required on oil tankers of 150 GT and above and other ships of 400 GT and above.",
+     "Contains: reporting procedures and contacts (coastal states, ports), steps to control the discharge, coordination with national and local authorities, and the SOPEP equipment locker (absorbents, scoops, drums, etc.).",
+     "Drills and the plan are reviewed regularly. Actions: stop the source, contain it on board (plug scuppers), report, clean up."]},
+ {t:"Pollution", q:"What are Emission Control Areas, and what are the fuel sulphur limits?",
+  a:["MARPOL Annex VI. Global sulphur cap: 0.50% m/m since 1 January 2020.",
+     "Inside a SOx ECA: 0.10% m/m (Baltic, North Sea including the English Channel, North American, US Caribbean, and the Mediterranean from 1 May 2025).",
+     "Compliance by low-sulphur fuel or an approved equivalent (e.g. exhaust gas cleaning 'scrubbers'). Record fuel changeover times, positions and quantities in the logbook. Bunker Delivery Notes are kept for 3 years.",
+     "NOx Tier III applies to newer engines in NOx ECAs."]},
+
+ // ---------- Stability
+ {t:"Stability", q:"Can you explain what GM is, and what it means for a ship to have a large or a small GM?",
+  a:["GM = metacentric height = KM − KG. Positive GM (M above G) means the ship is stable at small angles.",
+     "Righting lever at small angles: GZ ≈ GM × sin θ.",
+     "Large GM: 'stiff', quick and violent rolling; uncomfortable and risks cargo shift and structural stress.",
+     "Small GM: 'tender', slow, lazy rolls with less margin of stability.",
+     "IMO intact stability criterion includes initial GM of at least 0.15 m."]},
+ {t:"Stability", q:"What is free surface effect, and how can it be reduced?",
+  a:["Liquid in a slack tank moves to the low side as the ship heels, shifting the tank's centre of gravity and reducing the righting lever. Its effect is a virtual rise of G (loss of GM).",
+     "It depends on the tank's free surface moment (mainly its breadth, as breadth cubed), not the quantity of liquid.",
+     "Reduce it: keep tanks pressed full or empty, minimise the number of slack tanks at any one time, and use longitudinally subdivided tanks. Take it into account in stability calculations."]},
+ {t:"Stability", q:"How would you tell the difference between a list and an angle of loll, and how would you correct an angle of loll?",
+  a:["List: G is off the centreline (unequal transverse weight distribution). The ship lies to one side steadily. Correct by shifting weight to the other side.",
+     "Loll: G is above M (negative initial GM) with G on the centreline. The ship flops to one side or the other and may roll about the loll angle. It can be dangerous.",
+     "Correct loll by lowering G: fill low tanks (double bottoms), starting with a small, divided tank on the low side, then the other side. Remove high weights. Eliminate free surfaces where possible.",
+     "Never correct loll by moving weight to the high side as if it were a list: the ship could flop over to a larger angle on the other side."]},
+ {t:"Stability", q:"Can you explain the meaning of the load line marks on a ship's side?",
+  a:["Deck line, Plimsoll disc and line (summer draught at the centre), plus the load line marks: TF (Tropical Fresh), F (Fresh), T (Tropical), S (Summer), W (Winter), WNA (Winter North Atlantic, ships 100 m and under).",
+     "Letters of the assigning authority beside the disc (e.g. LR for Lloyd's Register).",
+     "Fresh Water Allowance (FWA): the amount the ship may submerge her load line in fresh water. Dock Water Allowance = FWA × (1025 − dock water density) ÷ 25.",
+     "Load line zones and seasonal areas are shown on a chart in the Load Line regulations."]},
+
+ // ---------- Added: more COLREGs scenarios
+ {t:"COLREGs", q:"At night you see a single red light fine on your starboard bow with no white light above it, and the bearing is steady. What could it be, and what would you do?",
+  a:["A red sidelight with no masthead light suggests a sailing vessel showing her port side (it could also be a small vessel or a vessel under oars).",
+     "A steady bearing means risk of collision exists (Rule 7).",
+     "As a power-driven vessel I must keep out of the way of a sailing vessel (Rule 18), whichever side she is on.",
+     "Take early and substantial action (Rule 16), such as a bold alteration to starboard to pass astern of her, or a reduction in speed, and check that it's working.",
+     "Use binoculars and radar to confirm what she is, and call the Master if in any doubt."]},
+ {t:"COLREGs", q:"At night you see a masthead light and a red sidelight on your starboard bow, with a steady bearing. What is the situation, and what would you do?",
+  a:["A power-driven vessel showing her port side: a crossing situation with her on my starboard side.",
+     "Rule 15: I am the give-way vessel and should avoid crossing ahead of her.",
+     "Rule 16: take early and substantial action, normally a bold alteration to starboard to pass astern of her, sounding one short blast (Rule 34(a)), or reduce speed.",
+     "Check the action is effective until she is finally past and clear (Rule 8(d))."]},
+ {t:"COLREGs", q:"In restricted visibility you hear a fog signal of one prolonged blast followed by two short blasts, apparently forward of the beam. What could it be, and what would you do?",
+  a:["One prolonged and two short is sounded by a vessel not under command, restricted in her ability to manoeuvre, constrained by her draught, sailing, engaged in fishing, or towing or pushing (Rule 35(c)).",
+     "Rule 19(e): reduce speed to the minimum at which I can keep my course, take all way off if necessary, and navigate with extreme caution until the danger of collision is over.",
+     "Call the Master, keep sounding my own fog signal, try to locate her by radar, post extra look-outs and keep the engines ready for immediate manoeuvre."]},
+ {t:"COLREGs", q:"What lights would a power-driven vessel show when she is pushing another vessel ahead?",
+  a:["If the two are rigidly connected as a composite unit, they are regarded as one power-driven vessel and show ordinary power-driven vessel lights (Rule 24(b)).",
+     "Otherwise the pushing vessel shows two masthead lights in a vertical line, sidelights and a sternlight (Rule 24(c)), with no towing light.",
+     "The vessel being pushed ahead shows sidelights at her forward end (Rule 24(f))."]},
+ {t:"COLREGs", q:"Where do the COLREGs apply, and can local rules take precedence over them?",
+  a:["Rule 1: they apply to all vessels on the high seas and in all waters connected to them that are navigable by seagoing vessels.",
+     "Special rules made by an appropriate authority for roadsteads, harbours, rivers, lakes or inland waterways may take precedence, but should conform as closely as possible to the COLREGs (for example local port byelaws).",
+     "Governments may also set additional lights, shapes or whistle signals for warships, vessels in convoy or fishing fleets.",
+     "Traffic separation schemes may be adopted by IMO for the purpose of the Rules."]},
+ {t:"COLREGs", q:"When is a vessel allowed to depart from the steering and sailing rules?",
+  a:["Rule 2(b): when a departure is necessary to avoid immediate danger, having regard to all dangers of navigation and collision and any special circumstances, including the limitations of the vessels involved.",
+     "Only to the extent needed, and only when following the rules would itself lead into danger. It is never an excuse for neglecting the rules (Rule 2(a)).",
+     "Rule 17(b) also requires the stand-on vessel to act when a collision can't be avoided by the give-way vessel alone."]},
+ {t:"COLREGs", q:"Should you use VHF radio to agree how to pass another vessel, and what are the dangers of doing so?",
+  a:["VHF can help confirm intentions, but the COLREGs must still be followed. An agreement on VHF doesn't override the Rules.",
+     "Dangers: talking to the wrong vessel, language difficulties, time wasted calling instead of acting, and agreeing a manoeuvre that goes against the Rules.",
+     "If you do use it, identify the vessel positively (name, MMSI, position, bearing and distance) and use IMO Standard Marine Communication Phrases.",
+     "Take early action as required by the Rules rather than relying on a VHF agreement."]},
+
+ // ---------- Added: watchkeeping
+ {t:"Watchkeeping", q:"What are the duties of the OOW while the ship is at anchor?",
+  a:["Fix the position frequently by more than one method and check the ship isn't dragging (bearings, radar ranges, GNSS anchor alarm).",
+     "Keep a proper look-out and monitor the weather, tide and visibility.",
+     "Make sure the correct anchor lights or shapes and sound signals are shown, and deck lights if the ship is 100 m or more.",
+     "Keep the engines ready as the Master orders, and call the Master if the anchor drags, the visibility drops or the weather worsens.",
+     "Keep a VHF watch, maintain ship security (ISPS), and watch for pollution and for other vessels anchoring close by."]},
+ {t:"Watchkeeping", q:"What are the duties of the deck OOW while the ship is alongside in port?",
+  a:["Moorings: tend the lines as the tide and draught change, and watch for the ship ranging along the berth.",
+     "Gangway: safe access that is correctly rigged and lit, with a safety net and a lifebuoy with line, and security controls under ISPS (check visitors' ID and keep a log).",
+     "Cargo operations: monitor loading or discharge against the plan, stresses, stability, draughts and ballast, and the safety of stevedores.",
+     "Fire and pollution prevention: enforce no-smoking areas, keep scuppers plugged and SOPEP gear ready, and watch for spills.",
+     "Follow the Master's and Chief Officer's standing orders, log events, and call them when in doubt."]},
+ {t:"Watchkeeping", q:"What is the purpose of the bridge navigational watch alarm system (BNWAS), and how does it work?",
+  a:["BNWAS (SOLAS V/19) monitors bridge activity and detects if the OOW becomes incapacitated, falls asleep or leaves the bridge.",
+     "The OOW must reset it at set intervals of between 3 and 12 minutes. If it isn't reset, a visual and then an audible alarm sounds on the bridge.",
+     "If it still isn't reset, the alarm sounds in the Master's or back-up officer's cabin, and then in other places where crew are likely to be.",
+     "It should be in operation whenever the ship is underway at sea."]},
+ {t:"Watchkeeping", q:"What is Bridge Resource Management, and why is it important?",
+  a:["BRM is the effective use of all the resources on the bridge, meaning people, equipment and information, to achieve a safe passage.",
+     "Key elements: a shared understanding of the passage plan, clear roles, closed-loop communication (repeating back orders), challenge and response, situational awareness, and avoiding complacency or over-reliance on one source of information.",
+     "Most accidents come from a chain of small errors. Good BRM lets the team spot and break that chain, so junior officers should speak up if something looks wrong, even to the Master or pilot."]},
+ {t:"Watchkeeping", q:"What is your relationship with the pilot when one is on board, and what is a Master–pilot exchange?",
+  a:["The pilot gives local knowledge and advice, but the Master keeps responsibility for the ship, and the OOW remains responsible for the watch and for monitoring the pilot's actions.",
+     "Master–pilot exchange (MPX): the pilot card and ship's particulars are handed over (draught, manoeuvring characteristics, any defects), the pilot's plan is agreed against the ship's passage plan, and tugs, mooring arrangements, VHF channels and expected conditions are discussed.",
+     "The OOW keeps fixing the position, monitors speed and heading, checks that helm and engine orders are carried out correctly, and tells the Master at once if in doubt about the pilot's actions."]},
+ {t:"Watchkeeping", q:"What entries would you make in the deck logbook during your watch?",
+  a:["Courses steered, compass errors, speed, and positions at regular intervals with the methods used to fix them.",
+     "Weather, sea state, visibility and barometric pressure.",
+     "Navigational events: alterations of course, passing marks, VTS reports, pilot embarking and disembarking, and the con being taken over or handed back.",
+     "Changes in visibility and the actions taken (fog signals, Master called, engines on standby).",
+     "Drills, inspections, accidents and anything unusual. Entries are made at the time and signed. Mistakes are struck through with a single line and initialled, never erased."]},
+
+ // ---------- Added: navigation
+ {t:"Navigation", q:"How would you fix the ship's position in coastal waters, and which method is the most accurate?",
+  a:["Visual compass bearings of three charted objects, ideally 60° to 120° apart. The size of the 'cocked hat' shows how accurate the fix is.",
+     "Radar ranges of well-defined targets, which are more accurate than radar bearings. A radar range combined with a visual bearing also works well.",
+     "Transits (two charted objects in line) give a very accurate position line.",
+     "GNSS should always be cross-checked by independent means. A running fix can be used if only one object is available.",
+     "The interval between fixes depends on how close the ship is to danger."]},
+ {t:"Navigation", q:"What is parallel indexing, and why is it useful?",
+  a:["It is a radar technique: an index line is drawn on the radar parallel to the planned track, offset by the planned passing distance from a fixed, well-defined radar target.",
+     "If the ship is on track, the target's echo moves along the index line. Any drift off the line shows a cross-track error straight away.",
+     "It gives continuous monitoring that doesn't depend on GNSS, and it lets the OOW keep a look-out at the same time. Wheel-over points can be marked on it too."]},
+ {t:"Navigation", q:"What is squat, and how does it affect your under-keel clearance?",
+  a:["Squat is the loss of under-keel clearance as a ship moves through the water. The faster flow under the hull lowers the pressure, so the ship sinks bodily and her trim changes.",
+     "It increases roughly with the square of the speed, and it is greater in shallow and confined water (channels, canals) and for full-bodied ships with a high block coefficient.",
+     "A common estimate (Barrass): maximum squat in metres ≈ Cb × V² ÷ 100 in open shallow water, and about double that in a confined channel, with V in knots.",
+     "Reduce speed in shallow water, and make sure the UKC policy and passage plan allow for squat."]},
+ {t:"Navigation", q:"How do you keep the ship's charts and nautical publications up to date?",
+  a:["Weekly Admiralty Notices to Mariners: apply the corrections to charts and publications and record each one in the chart correction log and on the chart.",
+     "Temporary and Preliminary (T&P) notices are entered in pencil and removed when cancelled.",
+     "ENCs are updated through the weekly update service on ECDIS. Check the update status and that the ENC permits are valid.",
+     "Navigational warnings from NAVTEX, SafetyNET and NAVAREA broadcasts are plotted as they arrive."]},
+ {t:"Navigation", q:"What are the main limitations of radar that the OOW should be aware of?",
+  a:["Small targets, wooden or GRP craft and ice may not be detected, especially in sea clutter or rain.",
+     "Blind and shadow sectors from masts and funnels, and false echoes such as multiple, side-lobe and indirect echoes.",
+     "Limits on range and bearing discrimination. Radar bearings are less accurate than ranges.",
+     "ARPA errors from incorrect speed or heading input, target swap, and a delay in showing a target's manoeuvre.",
+     "X-band gives better definition and detects SARTs, while S-band performs better in rain and sea clutter."]},
+ {t:"Navigation", q:"Why shouldn't you rely on AIS for collision avoidance?",
+  a:["Not all vessels carry AIS or have it switched on (small craft, warships, some fishing vessels).",
+     "Its data can be wrong: incorrect static data, an out-of-date navigational status, or a GNSS position error.",
+     "Reporting intervals and Class B units mean the information may be delayed.",
+     "Radar plotting and visual compass bearings remain the primary means of assessing risk of collision (Rule 7). AIS is an aid, for example to identify a vessel before calling her on VHF."]},
+ {t:"Navigation", q:"How would you obtain weather information during a passage?",
+  a:["NAVTEX broadcasts in coastal waters and Inmarsat EGC SafetyNET in ocean areas, including gale warnings.",
+     "Coast radio station broadcasts and national forecasts such as the UK Shipping Forecast.",
+     "Weather routeing services, weather fax and GRIB files where available.",
+     "Our own observations: barometer trend, wind, sea and swell, and cloud, recorded in the logbook."]},
+
+ // ---------- Added: emergencies
+ {t:"Emergencies", q:"Your ship receives a VHF DSC distress alert. What would you do?",
+  a:["Note the details (MMSI, position, nature of distress, time) and inform the Master.",
+     "Listen on VHF channel 16 for the voice distress call that should follow.",
+     "Don't normally acknowledge by DSC: in Sea Area A1 the coast station or MRCC acknowledges. Acknowledge by voice on channel 16 if you are clearly in the vicinity and able to help, and inform the RCC.",
+     "Plot the position and assess whether you can assist. Under SOLAS V/33 the Master must proceed with all speed to assist persons in distress, unless unable to or released from the obligation.",
+     "Don't relay the alert by DSC unless the RCC asks or it's clearly necessary. Record everything in the GMDSS radio log."]},
+ {t:"Emergencies", q:"Which search patterns could be used in a search and rescue operation, and when would you use each one?",
+  a:["The patterns are in the IAMSAR Manual Volume III, which is carried on board.",
+     "Expanding square search: when the search object's location is known within fairly close limits; it starts at the datum and spirals outwards, usually with one vessel.",
+     "Sector search: when the position is accurately known and the area is small, for example a person overboard.",
+     "Parallel track search: a large area where the location is uncertain, especially with several vessels searching in line abreast.",
+     "The On-Scene Coordinator, appointed by the RCC, allocates search areas, patterns and track spacing."]},
+ {t:"Emergencies", q:"How would you prepare the ship for a helicopter operation?",
+  a:["Agree the arrangements with the helicopter or MRCC on VHF: the winching area, the ship's course and speed, and details of the casualty or transfer.",
+     "Usually keep a steady course with the relative wind about 30° on the port bow, or as the pilot directs, at a steady speed.",
+     "Clear the area of loose objects, and lower aerials, flags and awnings where possible. Light the deck without dazzling the pilot.",
+     "Have the fire party ready with hoses run out and foam available, and the rescue boat on standby.",
+     "Don't touch the winch hook until it has earthed on deck (static discharge), and never secure the winch wire to the ship.",
+     "Use the checklist in the ICS Guide to Helicopter/Ship Operations."]},
+ {t:"Emergencies", q:"What would you do if you discovered serious flooding in one of the holds?",
+  a:["Sound the general alarm and inform the Master and the engine room.",
+     "Close watertight doors and openings, find the source, and isolate it if possible.",
+     "Start the bilge and ballast pumps, monitor soundings, and work out the effect on stability and trim.",
+     "Consider reducing speed or altering course to reduce the strain and the water coming in, shoring up bulkheads, and if necessary beaching the ship.",
+     "Send an urgency or distress message as appropriate, prepare the life-saving appliances, and record everything."]},
+ {t:"Emergencies", q:"What would you do if the ship suffered a total blackout at sea?",
+  a:["Inform the Master and the engine room. The emergency generator should start automatically; check that emergency lighting and essential equipment have power.",
+     "Exhibit not-under-command lights on the emergency supply and sound the appropriate signals. Warn other vessels on VHF with a Sécurité or urgency message.",
+     "Check the ship's position, drift and distance from danger, and prepare to anchor if in shallow water.",
+     "Check that steering, navigation equipment and GMDSS are working on emergency power, and log the events and times."]},
+ {t:"Emergencies", q:"If you had to enter the water without a survival craft, how would you give yourself the best chance of survival?",
+  a:["Wear a lifejacket and an immersion suit if possible, with warm clothing underneath. Enter the water feet first, holding the lifejacket down.",
+     "Cold shock in the first minutes causes uncontrolled gasping, so control your breathing before doing anything else.",
+     "Don't swim unless you are reaching a survival craft or safety close by; swimming increases heat loss.",
+     "Adopt the HELP position (Heat Escape Lessening Posture) if alone, or huddle together if in a group, to conserve body heat.",
+     "Stay with others, and use the lifejacket light, whistle and any other locating aids."]},
+ {t:"Emergencies", q:"What are synchronous and parametric rolling, and how would you stop them?",
+  a:["Synchronous rolling: the ship's natural rolling period matches the period of wave encounter, so each wave adds to the roll and it builds up dangerously.",
+     "Parametric rolling: in head or following seas, when the wave encounter period is about half the ship's natural rolling period and the wavelength is close to the ship's length. Stability changes as crests pass, causing sudden large rolls. Container ships and car carriers are especially prone to it.",
+     "For both, change course and/or speed to alter the encounter period, and avoid heading directly into or away from a long swell at a critical speed."]},
+
+ // ---------- Added: safety
+ {t:"Safety & LSA", q:"What is the procedure before releasing a fixed CO₂ system into the engine room?",
+  a:["The order to release comes from the Master. Evacuate everyone and carry out a headcount: nobody must be left in the space.",
+     "Stop the ventilation fans; close fire dampers, skylights, doors and all other openings; shut off fuel using the quick-closing valves; and stop machinery.",
+     "Operate the release. A warning alarm sounds in the space before the gas is discharged.",
+     "Keep the space sealed and boundary-cool it. Don't re-enter until the fire is confirmed out and the space has cooled, then ventilate and test the atmosphere, and enter with breathing apparatus."]},
+ {t:"Safety & LSA", q:"What is a permit-to-work system, and when would one be needed?",
+  a:["A formal written system, part of the SMS, that controls hazardous work: it identifies the hazards, precautions, isolations and the person responsible, with authorisation and time limits.",
+     "Needed for hot work (welding, cutting), enclosed space entry, working aloft or overside, electrical work, and work on high-pressure systems.",
+     "It is issued after a risk assessment and toolbox talk, displayed at the work site, and closed out when the job is finished and the area is safe."]},
+ {t:"Safety & LSA", q:"What precautions would you take before someone works aloft or over the side?",
+  a:["A permit to work and risk assessment, and the bridge informed.",
+     "A fall-arrest harness with a lifeline secured to a strong point, plus a lifejacket or buoyancy aid when working overside.",
+     "Equipment checked (bosun's chair, staging, lines), tools secured against dropping, and the area below kept clear.",
+     "Radar and radio aerials isolated, the whistle and funnel considered, and the ship's motion acceptable. Don't work overside while the ship is making way.",
+     "A person standing by at all times, and a lifebuoy with line ready when working overside."]},
+ {t:"Safety & LSA", q:"What precautions should be taken during bunkering?",
+  a:["Agree a bunker plan (tanks, quantities, pumping rates, sequence), complete the pre-transfer checklist with the supplier, and agree communications and an emergency stop signal.",
+     "Plug the scuppers, place drip trays, and have SOPEP equipment ready at the manifold.",
+     "Show a red flag by day and a red all-round light by night. No smoking, naked lights or hot work.",
+     "Sound the tanks regularly, slow down when topping off, and don't fill above about 90% of tank capacity.",
+     "Watch the hoses, moorings and draught, stop immediately if there's a leak, and record the operation in the Oil Record Book."]},
+ {t:"Safety & LSA", q:"What equipment is carried in a lifeboat?",
+  a:["Survival: drinking water (3 litres per person), food rations (at least 10,000 kJ per person), a first-aid kit, anti-seasickness medicine and sick bags, and thermal protective aids for 10% of the persons (at least 2).",
+     "Signalling: 4 rocket parachute flares, 6 hand flares, 2 buoyant smoke signals, a waterproof torch, a daylight signalling mirror, a whistle and a table of life-saving signals.",
+     "Seamanship: sea anchor, painters, buoyant oars, boathook, bailer and buckets, compass, a radar reflector (unless a SART is carried), knife, tin openers, fishing tackle, two rescue quoits with line, a manual pump and a fire extinguisher.",
+     "Engine tools, a searchlight and a survival manual."]},
+
+ // ---------- Added: ship & law
+ {t:"Ship & law", q:"Which certificates and documents must a merchant ship carry?",
+  a:["Certificate of Registry, International Tonnage Certificate and International Load Line Certificate.",
+     "Cargo Ship Safety Construction, Safety Equipment and Safety Radio Certificates (or a combined Cargo Ship Safety Certificate).",
+     "MARPOL certificates: IOPP, IAPP (with EIAPP for engines), International Sewage Pollution Prevention Certificate and the International Energy Efficiency Certificate.",
+     "A copy of the company's Document of Compliance and the ship's Safety Management Certificate (ISM), and the International Ship Security Certificate (ISPS).",
+     "Maritime Labour Certificate and DMLC, the Minimum Safe Manning Document, and the crew's certificates of competency.",
+     "International Ballast Water Management Certificate, the Continuous Synopsis Record, and insurance certificates (oil pollution, bunkers, wreck removal)."]},
+ {t:"Ship & law", q:"What is the Maritime Labour Convention, and what does it cover?",
+  a:["MLC 2006, often called the seafarers' bill of rights, sets minimum standards for working and living conditions on board.",
+     "It covers minimum age (16), medical certificates, seafarer employment agreements, wages, hours of work and rest, leave, repatriation, manning levels, accommodation, food, medical care, health and safety, and on-board complaints procedures.",
+     "Ships of 500 GT and over on international voyages carry a Maritime Labour Certificate and a Declaration of Maritime Labour Compliance (DMLC Parts I and II).",
+     "It is enforced through flag state inspections and Port State Control."]},
+ {t:"Ship & law", q:"What is Port State Control, and how would you prepare the ship for an inspection?",
+  a:["Inspections of foreign ships in a country's ports to check they comply with international conventions such as SOLAS, MARPOL, STCW, MLC and Load Lines. In the UK and Europe this is done under the Paris MoU.",
+     "The inspector checks certificates and documents, then the ship's condition, equipment and crew competence, and may ask for a drill.",
+     "Serious deficiencies can lead to the ship being detained. Ships are selected for inspection using a risk profile.",
+     "To prepare: certificates valid and to hand, records up to date (logbooks, Oil Record Book, rest hours, drills), life-saving and fire-fighting equipment in good order, and crew familiar with their duties and the SMS."]},
+ {t:"Ship & law", q:"What does a voyage data recorder record, and what would you do with it after an incident?",
+  a:["The VDR records the date and time, position, speed, heading, bridge audio, VHF communications, radar and ECDIS images, AIS data, echo sounder, main alarms, rudder and engine orders and responses, hull opening and watertight door status, and wind.",
+     "The data is kept in a protective capsule but is overwritten after a set period, so it must be saved promptly.",
+     "After an incident, press the save (incident) button as soon as possible, inform the Master and the company, and preserve the data for the investigation (the MAIB in the UK)."]},
+ {t:"Ship & law", q:"What does the Ballast Water Management Convention require?",
+  a:["Its aim is to stop the spread of harmful aquatic organisms in ships' ballast water.",
+     "Ships carry an approved Ballast Water Management Plan, a Ballast Water Record Book and an International Ballast Water Management Certificate.",
+     "D-1 standard (exchange): at least 200 nm from the nearest land in water at least 200 m deep, or at least 50 nm from land where that isn't possible, with 95% volumetric exchange.",
+     "D-2 standard (treatment): strict limits on viable organisms in discharged ballast, met using an approved treatment system. Ships are now required to meet D-2."]},
+
+ // ---------- Added: stability
+ {t:"Stability", q:"How does loading, discharging or lifting a weight affect the ship's stability?",
+  a:["Loading a weight above the ship's centre of gravity raises G and reduces GM. Discharging weight from high up lowers G and increases GM.",
+     "Loading low down, for example in double-bottom tanks, lowers G and increases GM.",
+     "When the ship's crane lifts a weight, the weight acts as if it were at the derrick or crane head as soon as it leaves the deck. This raises G significantly and causes a list if it's off the centreline.",
+     "Always check stability and the expected list before a heavy lift, and reduce free surfaces beforehand."]},
+ {t:"Stability", q:"What is the difference between draught, freeboard and reserve buoyancy?",
+  a:["Draught: the vertical distance from the keel to the waterline.",
+     "Freeboard: the vertical distance from the waterline to the upper edge of the freeboard deck line at the ship's side, amidships.",
+     "Reserve buoyancy: the volume of the watertight hull above the waterline. It keeps the ship afloat if she's damaged or ships water, and freeboard is a measure of it.",
+     "The load line rules set a minimum freeboard to ensure enough reserve buoyancy and a safe working deck."]},
+];
+
+const CARDS = [
+ // COLREGs: rules
+ {t:"COLREGs", f:"Rule 5", b:"Look-out: proper look-out by sight, hearing and all available means at all times."},
+ {t:"COLREGs", f:"Rule 6", b:"Safe speed: able to take proper and effective action to avoid collision and stop within a distance appropriate to the circumstances."},
+ {t:"COLREGs", f:"Rule 7", b:"Risk of collision: if the compass bearing doesn't appreciably change, risk exists. If in doubt, it exists."},
+ {t:"COLREGs", f:"Rule 8", b:"Action to avoid collision: positive, ample time, good seamanship, readily apparent, pass at a safe distance."},
+ {t:"COLREGs", f:"Rule 9", b:"Narrow channels: keep to the starboard side; small/sailing/fishing vessels must not impede."},
+ {t:"COLREGs", f:"Rule 10", b:"Traffic separation schemes: follow the lane, join/leave at ends, cross at right angles (heading)."},
+ {t:"COLREGs", f:"Rule 13", b:"Overtaking: approaching from more than 22.5° abaft the beam. The overtaking vessel keeps clear."},
+ {t:"COLREGs", f:"Rule 14", b:"Head-on: both power-driven vessels alter to starboard."},
+ {t:"COLREGs", f:"Rule 15", b:"Crossing: the vessel with the other on her own starboard side keeps out of the way and avoids crossing ahead."},
+ {t:"COLREGs", f:"Rule 16", b:"Give-way vessel: take early and substantial action to keep well clear."},
+ {t:"COLREGs", f:"Rule 17", b:"Stand-on vessel: keep course and speed; may act if the give-way vessel doesn't; must act if collision can't be avoided by the give-way vessel alone; don't alter to port for a vessel on your port side."},
+ {t:"COLREGs", f:"Rule 18", b:"Responsibilities: power gives way to sail, fishing, RAM, NUC. All except NUC/RAM avoid impeding CBD."},
+ {t:"COLREGs", f:"Rule 19", b:"Restricted visibility: no stand-on vessel. Safe speed, engines ready. Avoid altering to port for a vessel forward of the beam; avoid altering towards a vessel abeam or abaft."},
+ {t:"COLREGs", f:"Rule 3: 'underway'", b:"Not at anchor, made fast to the shore, or aground."},
+ {t:"COLREGs", f:"Rule 3: 'restricted visibility'", b:"Any condition in which visibility is restricted by fog, mist, falling snow, heavy rainstorms, sandstorms or similar causes."},
+ {t:"COLREGs", f:"Rule 3: 'vessel engaged in fishing'", b:"Fishing with nets, lines, trawls or other gear which restrict manoeuvrability. Not trolling lines or other gear which doesn't restrict manoeuvrability."},
+ {t:"COLREGs", f:"Rule 3: 'constrained by her draught'", b:"A power-driven vessel severely restricted, because of her draught in relation to the available depth and width of navigable water, in her ability to deviate from her course."},
+ // Lights
+ {t:"Lights", f:"Arc of a masthead light", b:"225°: from right ahead to 22.5° abaft the beam on either side."},
+ {t:"Lights", f:"Arc of each sidelight", b:"112.5°: from right ahead to 22.5° abaft the beam on its side."},
+ {t:"Lights", f:"Arc of the sternlight", b:"135°: 67.5° each side of right astern."},
+ {t:"Lights", f:"Towing light", b:"Yellow, same characteristics as the sternlight (135°), shown above the sternlight."},
+ {t:"Lights", f:"Light ranges, vessel 50 m or more", b:"Masthead 6 nm; sidelights 3; sternlight 3; towing 3; all-round 3."},
+ {t:"Lights", f:"Light ranges, vessel 12 m to under 50 m", b:"Masthead 5 nm (3 nm if under 20 m); sidelights 2; sternlight 2; towing 2; all-round 2."},
+ {t:"Lights", f:"Light ranges, vessel under 12 m", b:"Masthead 2 nm; sidelights 1; sternlight 2; towing 2; all-round 2."},
+ {t:"Lights", f:"Second masthead light: when required?", b:"Power-driven vessels of 50 m or more must show it (abaft and higher than the forward one). Under 50 m: optional."},
+ {t:"Lights", f:"Red over white all-round", b:"Vessel engaged in fishing (other than trawling)."},
+ {t:"Lights", f:"Green over white all-round", b:"Vessel engaged in trawling."},
+ {t:"Lights", f:"White over red all-round", b:"Pilot vessel on pilotage duty. ('White hat, red nose')"},
+ {t:"Lights", f:"Two all-round red, vertical", b:"Not under command."},
+ {t:"Lights", f:"Red-white-red all-round, vertical", b:"Restricted in her ability to manoeuvre."},
+ {t:"Lights", f:"Three all-round red, vertical", b:"Constrained by her draught (with power-driven vessel lights)."},
+ {t:"Lights", f:"Three all-round green (triangle)", b:"Engaged in mine clearance: dangerous to approach within 1000 m."},
+ {t:"Lights", f:"All-round flashing yellow", b:"Air-cushion vessel operating in non-displacement mode (plus power-driven lights)."},
+ {t:"Lights", f:"Two anchor lights: which is higher?", b:"The forward one is higher than the one at or near the stern."},
+ {t:"Lights", f:"Vessel aground: lights and shape", b:"Anchor lights + two all-round red vertical. Day: three balls in a vertical line."},
+ {t:"Lights", f:"Deck working lights at anchor", b:"Vessels of 100 m and more must also illuminate their decks with working lights."},
+ // Shapes
+ {t:"Shapes", f:"One ball", b:"At anchor."},
+ {t:"Shapes", f:"Two balls, vertical", b:"Not under command."},
+ {t:"Shapes", f:"Three balls, vertical", b:"Aground."},
+ {t:"Shapes", f:"Ball – diamond – ball", b:"Restricted in her ability to manoeuvre."},
+ {t:"Shapes", f:"Cylinder", b:"Constrained by her draught."},
+ {t:"Shapes", f:"Two cones, apexes together", b:"Engaged in fishing. (Under 20 m may show a basket instead.)"},
+ {t:"Shapes", f:"Cone, apex downwards", b:"Sailing vessel also being propelled by machinery."},
+ {t:"Shapes", f:"Diamond", b:"Towing or being towed, length of tow over 200 m."},
+ {t:"Shapes", f:"Three balls: one at masthead, one each yardarm", b:"Mine clearance."},
+ // Sound
+ {t:"Sound", f:"Short blast / prolonged blast", b:"Short: about 1 second. Prolonged: 4 to 6 seconds."},
+ {t:"Sound", f:"One / two / three short blasts", b:"I am altering my course to starboard / to port / I am operating astern propulsion."},
+ {t:"Sound", f:"At least five short and rapid blasts", b:"I fail to understand your intentions or doubt you're taking sufficient action."},
+ {t:"Sound", f:"Fog: power-driven vessel making way", b:"One prolonged blast at intervals of not more than 2 minutes."},
+ {t:"Sound", f:"Fog: power-driven vessel underway, stopped", b:"Two prolonged blasts (about 2 s apart) at intervals of not more than 2 minutes."},
+ {t:"Sound", f:"Fog: NUC, RAM, CBD, sailing, fishing, towing/pushing", b:"One prolonged followed by two short, at intervals of not more than 2 minutes."},
+ {t:"Sound", f:"Fog: vessel at anchor", b:"Rapid ringing of the bell for about 5 s every minute. 100 m+: bell forward then gong aft. May add short-prolonged-short."},
+ {t:"Sound", f:"Fog: vessel aground", b:"Three separate strokes on the bell, rapid ringing, three separate strokes (plus gong if 100 m+)."},
+ {t:"Sound", f:"General emergency alarm", b:"Seven or more short blasts followed by one long blast."},
+ // Buoyage
+ {t:"Buoyage", f:"IALA A port-hand mark", b:"Red can (cylinder) topmark; red light, any rhythm except composite group flashing (2+1). Leave to port going with the direction of buoyage."},
+ {t:"Buoyage", f:"IALA A starboard-hand mark", b:"Green cone point-up topmark; green light, any rhythm except Fl(2+1)."},
+ {t:"Buoyage", f:"Preferred channel to starboard (IALA A)", b:"Red with one broad green band, red can topmark, Fl(2+1) R. Treat as a port-hand mark: the preferred channel is to starboard."},
+ {t:"Buoyage", f:"Isolated danger mark", b:"Black with red band(s), two black balls topmark, Fl(2) white."},
+ {t:"Buoyage", f:"Safe water mark", b:"Red and white vertical stripes, single red ball topmark, white light: Iso, Oc, LFl 10s or Mo(A)."},
+ {t:"Buoyage", f:"Special mark", b:"Yellow, yellow X topmark, yellow light (rhythm not used for other white lights)."},
+ {t:"Buoyage", f:"Emergency wreck marking buoy", b:"Blue and yellow vertical stripes, yellow upright cross topmark, alternating blue and yellow light (Al.Bu.Y)."},
+ {t:"Buoyage", f:"Cardinal light rhythms", b:"N: Q/VQ continuous. E: Q(3) 10s / VQ(3) 5s. S: Q(6)+LFl 15s / VQ(6)+LFl 10s. W: Q(9) 15s / VQ(9) 10s."},
+ // GMDSS
+ {t:"GMDSS", f:"Sea Area A1", b:"Within VHF DSC coverage of a coast station (roughly 20–30 nm)."},
+ {t:"GMDSS", f:"Sea Area A2", b:"Within MF DSC coverage of a coast station (roughly 100–150 nm), excluding A1."},
+ {t:"GMDSS", f:"Sea Area A3", b:"Within coverage of a recognised mobile satellite service (Inmarsat geostationary, about 70°N to 70°S), excluding A1 and A2."},
+ {t:"GMDSS", f:"Sea Area A4", b:"Everything outside A1, A2 and A3: essentially the polar regions."},
+ {t:"GMDSS", f:"VHF DSC distress channel / voice", b:"Channel 70 for DSC; channel 16 for voice distress, urgency and safety."},
+ {t:"GMDSS", f:"MF DSC distress / voice", b:"2187.5 kHz DSC; 2182 kHz voice."},
+ {t:"GMDSS", f:"EPIRB frequencies", b:"406 MHz to Cospas-Sarsat satellites (with GNSS position), plus 121.5 MHz homing. Many now include AIS."},
+ {t:"GMDSS", f:"SART on radar", b:"Radar SART responds to X-band (9 GHz, 3 cm) radar: a line of 12 dots outward from its position, becoming arcs then circles as you close."},
+ {t:"GMDSS", f:"NAVTEX frequencies", b:"518 kHz international (English); 490 kHz national language; 4209.5 kHz HF NAVTEX."},
+ {t:"GMDSS", f:"Pan-Pan vs Sécurité", b:"PAN-PAN: urgency (safety of ship or person, not grave and imminent). SÉCURITÉ: safety (navigational or weather warnings)."},
+ // Safety & LSA
+ {t:"Safety & LSA", f:"Abandon ship + fire drill frequency (cargo ship)", b:"Each crew member at least once a month; within 24 h of leaving port if over 25% haven't drilled on board in the last month."},
+ {t:"Safety & LSA", f:"Lifeboat launch frequency", b:"Launched with assigned crew and manoeuvred in the water at least every 3 months."},
+ {t:"Safety & LSA", f:"Enclosed space drill frequency", b:"At least every 2 months."},
+ {t:"Safety & LSA", f:"Emergency steering drill frequency", b:"At least every 3 months (SOLAS V/26)."},
+ {t:"Safety & LSA", f:"Rocket parachute flares on the bridge", b:"At least 12, stowed on or near the navigating bridge."},
+ {t:"Safety & LSA", f:"HRU operating depth", b:"About 2–4 m: the hydrostatic release frees the liferaft container, the painter triggers inflation, the weak link breaks."},
+ {t:"Safety & LSA", f:"Fire classes (UK/EU)", b:"A solids · B flammable liquids · C gases · D metals · F cooking oils and fats. (Electrical isn't a class: isolate first.)"},
+ {t:"Safety & LSA", f:"Extinguisher label colours", b:"Water: red · Foam: cream · CO₂: black · Dry powder: blue · Wet chemical: yellow."},
+ {t:"Safety & LSA", f:"Safe atmosphere for enclosed space entry", b:"O₂ 20.9% (21%), flammables below 1% LFL, toxic gases below exposure limits."},
+ // Watchkeeping
+ {t:"Watchkeeping", f:"Minimum rest (STCW/MLC)", b:"10 h in any 24 h and 77 h in any 7 days. At most two periods, one of at least 6 h. Gaps no more than 14 h."},
+ {t:"Watchkeeping", f:"STCW alcohol limit", b:"No more than 0.05% blood alcohol (0.25 mg/l in breath) while on watch or performing safety duties."},
+ {t:"Watchkeeping", f:"APEM", b:"Passage planning: Appraisal, Planning, Execution, Monitoring (IMO A.893)."},
+ {t:"Watchkeeping", f:"'Error east, compass least…'", b:"'…error west, compass best.' Easterly error: true is greater than compass; westerly: true is less."},
+ // Pollution
+ {t:"Pollution", f:"Oily water discharge limit", b:"15 ppm, en route, through approved equipment (MARPOL Annex I, machinery spaces). Never in the Antarctic area."},
+ {t:"Pollution", f:"Plastics overboard", b:"Prohibited everywhere (MARPOL Annex V)."},
+ {t:"Pollution", f:"Global fuel sulphur cap / ECA limit", b:"0.50% globally (since 2020); 0.10% in SOx Emission Control Areas."},
+ {t:"Pollution", f:"SOPEP is required on…", b:"Oil tankers of 150 GT and above; all other ships of 400 GT and above."},
+ // Stability
+ {t:"Stability", f:"GM = ?", b:"KM − KG. Positive GM means stable at small angles."},
+ {t:"Stability", f:"Stiff vs tender", b:"Stiff: large GM, quick violent rolls. Tender: small GM, slow lazy rolls."},
+ {t:"Stability", f:"Free surface effect", b:"Virtual rise of G from slack tanks. Depends on tank breadth (breadth cubed), not quantity."},
+ {t:"Stability", f:"Dock water allowance", b:"DWA = FWA × (1025 − density) ÷ 25."},
+ {t:"Stability", f:"IMO intact stability: minimum GM", b:"Initial GM at least 0.15 m. GZ at least 0.20 m at an angle of 30° or more; max GZ at 25° or more."},
+];
+
+// Night scenes: [x, y, colour, flashing?] on a 200×120 view, horizon at y=100.
+// Day scenes: shapes [x, y, type] with masts drawn behind.
+const LIGHTS = [
+ {mode:"night", l:[[100,45,"w"],[90,80,"g"],[110,80,"r"]], a:"Power-driven vessel under 50 m, head-on",
+  why:"One masthead light with both sidelights: head-on. Rule 14: both alter to starboard. Note her red is on your right because she's facing you."},
+ {mode:"night", l:[[100,28,"w"],[100,52,"w"],[88,82,"g"],[112,82,"r"]], a:"Power-driven vessel 50 m or more, head-on",
+  why:"Two masthead lights in line, aft one higher, plus both sidelights. Masthead lights in line = head-on (Rule 14)."},
+ {mode:"night", l:[[70,34,"w"],[132,54,"w"],[122,82,"g"]], a:"Power-driven vessel 50 m or more, showing her starboard side",
+  why:"Two masthead lights, the lower (forward) one to the right, so she's heading to your right and you see her green side. If she's on your port side and the bearing is steady, you are the stand-on vessel."},
+ {mode:"night", l:[[86,44,"w"],[80,80,"r"]], a:"Power-driven vessel under 50 m, showing her port side",
+  why:"One masthead light and a red sidelight: she's heading to your left. If she's on your starboard side with a steady bearing, you are the give-way vessel (Rule 15)."},
+ {mode:"night", l:[[100,78,"w"]], a:"A single white light: vessel seen from astern, a small vessel, or a vessel under 50 m at anchor",
+  why:"One white light alone could be a sternlight, a vessel under 50 m at anchor, or a small vessel under 7 m. Look for movement and check the radar."},
+ {mode:"night", l:[[93,80,"g"],[107,80,"r"]], a:"Sailing vessel underway, head-on",
+  why:"Sidelights with no masthead light: sailing vessel. A power-driven vessel keeps out of her way (Rule 18)."},
+ {mode:"night", l:[[100,24,"r"],[100,35,"g"],[116,82,"g"]], a:"Sailing vessel with optional red-over-green masthead lights, starboard side",
+  why:"Rule 25(c): a sailing vessel may show red over green all-round at the masthead, in addition to sidelights and sternlight. 'Red over green, sailing machine.'"},
+ {mode:"night", l:[[74,30,"w"],[74,43,"w"],[82,82,"r"]], a:"Power-driven vessel towing, tow under 200 m, showing her port side",
+  why:"Two masthead lights in a vertical line = towing, tow 200 m or less. Look for the tow astern of her: sidelights and sternlight on the towed vessel."},
+ {mode:"night", l:[[100,26,"w"],[100,38,"w"],[100,50,"w"],[90,82,"g"],[110,82,"r"]], a:"Power-driven vessel towing, tow over 200 m, head-on",
+  why:"Three masthead lights in a vertical line = tow length over 200 m. Day shape: a diamond on both the towing vessel and the tow."},
+ {mode:"night", l:[[100,66,"y"],[100,80,"w"]], a:"Towing vessel seen from astern",
+  why:"Yellow towing light above the white sternlight. Keep well clear: there's a tow behind her and a towline in between."},
+ {mode:"night", l:[[100,30,"r"],[100,43,"r"],[120,82,"g"]], a:"Vessel not under command, making way, starboard side",
+  why:"Two all-round reds = NUC. She shows sidelights and sternlight only when making way, and no masthead light."},
+ {mode:"night", l:[[100,36,"r"],[100,49,"r"]], a:"Vessel not under command, not making way",
+  why:"Two all-round reds, no sidelights: NUC and stopped in the water."},
+ {mode:"night", l:[[88,28,"r"],[88,40,"w"],[88,52,"r"],[112,38,"w"],[95,82,"g"],[109,82,"r"]], a:"Vessel restricted in her ability to manoeuvre, making way, head-on",
+  why:"Red-white-red all-round = RAM, plus masthead light and sidelights because she's making way through the water."},
+ {mode:"night", l:[[88,26,"r"],[88,38,"r"],[88,50,"r"],[112,38,"w"],[95,82,"g"],[109,82,"r"]], a:"Vessel constrained by her draught, head-on",
+  why:"Three all-round reds in a vertical line plus power-driven lights = CBD (Rule 28). Avoid impeding her."},
+ {mode:"night", l:[[142,44,"w"],[58,62,"w"]], a:"Vessel 50 m or more at anchor, heading to your right",
+  why:"Two all-round whites: the forward one is higher. So her bow is on the right. Vessels 100 m+ must also light up their decks."},
+ {mode:"night", l:[[142,44,"w"],[58,62,"w"],[100,34,"r"],[100,47,"r"]], a:"Vessel aground",
+  why:"Anchor lights plus two all-round reds in a vertical line. Day signal: three balls."},
+ {mode:"night", l:[[96,34,"g"],[96,47,"w"],[84,82,"r"]], a:"Vessel engaged in trawling, making way, port side",
+  why:"Green over white all-round = trawling ('green over white, trawling at night'). Sidelights because she's making way."},
+ {mode:"night", l:[[100,38,"r"],[100,51,"w"]], a:"Vessel engaged in fishing (not trawling), not making way",
+  why:"Red over white all-round = fishing other than trawling ('red over white, fishing at night'). No sidelights: not making way."},
+ {mode:"night", l:[[100,38,"w"],[100,51,"r"],[93,82,"g"],[107,82,"r"]], a:"Pilot vessel on duty, underway, head-on",
+  why:"White over red all-round = pilot vessel on pilotage duty ('white hat, red nose')."},
+ {mode:"night", l:[[100,26,"g"],[83,40,"g"],[117,40,"g"],[100,50,"w"],[93,82,"g"],[107,82,"r"]], a:"Vessel engaged in mine clearance, head-on",
+  why:"Three all-round greens (one at the foremast head, one at each yardarm) plus power-driven lights. Dangerous to approach within 1000 m."},
+ {mode:"night", l:[[100,28,"y",1],[100,45,"w"],[93,82,"g"],[107,82,"r"]], a:"Air-cushion vessel (hovercraft) in non-displacement mode, head-on",
+  why:"All-round flashing yellow plus power-driven vessel lights (Rule 23(b))."},
+
+ {mode:"day", s:[[100,40,"ball"]], a:"Vessel at anchor", why:"One ball in the fore part of the vessel (Rule 30)."},
+ {mode:"day", s:[[100,28,"ball"],[100,44,"ball"],[100,60,"ball"]], a:"Vessel aground", why:"Three balls in a vertical line (Rule 30(d))."},
+ {mode:"day", s:[[100,36,"ball"],[100,52,"ball"]], a:"Vessel not under command", why:"Two balls in a vertical line (Rule 27(a))."},
+ {mode:"day", s:[[100,28,"ball"],[100,44,"diamond"],[100,60,"ball"]], a:"Vessel restricted in her ability to manoeuvre", why:"Ball, diamond, ball in a vertical line (Rule 27(b))."},
+ {mode:"day", s:[[100,42,"cylinder"]], a:"Vessel constrained by her draught", why:"A cylinder (Rule 28)."},
+ {mode:"day", s:[[100,36,"coneDown"],[100,50,"coneUp"]], a:"Vessel engaged in fishing", why:"Two cones with their apexes together, one above the other (Rule 26). A vessel under 20 m may show a basket."},
+ {mode:"day", s:[[100,40,"coneDown"]], a:"Sailing vessel also propelled by machinery", why:"A cone, apex downwards, where best seen (Rule 25(e))."},
+ {mode:"day", s:[[100,42,"diamond"]], a:"Towing or being towed, tow over 200 m", why:"A diamond where best seen, on both the towing vessel and the tow (Rule 24)."},
+ {mode:"day", s:[[100,26,"ball"],[74,46,"ball"],[126,46,"ball"]], yard:true, a:"Vessel engaged in mine clearance", why:"Three balls: one at the foremast head, one at each end of the fore yard (Rule 27(f))."},
+ {mode:"day", s:[[100,28,"ball"],[100,44,"diamond"],[100,60,"ball"],[72,52,"ball"],[72,66,"ball"],[128,52,"diamond"],[128,66,"diamond"]], yard:true,
+  a:"Dredger (RAM) with an obstruction: pass on the diamonds side", why:"RAM shapes in the middle; two balls on the obstructed side, two diamonds on the side where another vessel may pass (Rule 27(d))."},
+ {mode:"day", s:[[100,34,"coneDown"],[100,48,"coneUp"],[128,52,"coneUp"]], yard:true, a:"Fishing vessel with gear extending more than 150 m", why:"Fishing shape plus a cone apex upwards in the direction of the outlying gear (Rule 26(c))."},
+
+ {mode:"sound", p:"s", a:"I am altering my course to starboard", why:"One short blast (Rule 34(a))."},
+ {mode:"sound", p:"ss", a:"I am altering my course to port", why:"Two short blasts (Rule 34(a))."},
+ {mode:"sound", p:"sss", a:"I am operating astern propulsion", why:"Three short blasts (Rule 34(a))."},
+ {mode:"sound", p:"sssss", a:"I don't understand your intentions / doubt you're taking enough action", why:"At least five short and rapid blasts (Rule 34(d)). May be backed by five short flashes."},
+ {mode:"sound", p:"l", a:"Approaching a bend in a channel, or power-driven vessel making way in fog", why:"One prolonged blast. Near a bend it's answered by one prolonged (Rule 34(e)). In restricted visibility, every 2 minutes or less (Rule 35(a))."},
+ {mode:"sound", p:"ll", a:"Power-driven vessel underway in fog, stopped and not making way", why:"Two prolonged blasts, about 2 s apart, every 2 minutes or less (Rule 35(b))."},
+ {mode:"sound", p:"lss", a:"Fog: NUC, RAM, CBD, sailing, fishing, or towing/pushing vessel", why:"One prolonged followed by two short, every 2 minutes or less (Rule 35(c)). Also a fishing or RAM vessel at anchor."},
+ {mode:"sound", p:"lsss", a:"Fog: manned vessel being towed (last of the tow)", why:"One prolonged followed by three short, immediately after the towing vessel's signal (Rule 35(e))."},
+ {mode:"sound", p:"lls", a:"I intend to overtake you on your starboard side", why:"Two prolonged and one short, in a narrow channel (Rule 34(c))."},
+ {mode:"sound", p:"llss", a:"I intend to overtake you on your port side", why:"Two prolonged and two short, in a narrow channel (Rule 34(c))."},
+ {mode:"sound", p:"lsls", a:"Agreement to being overtaken", why:"Prolonged, short, prolonged, short. The vessel being overtaken agrees (Rule 34(c)(ii))."},
+ {mode:"sound", p:"sls", a:"Vessel at anchor warning an approaching vessel of her position", why:"Short, prolonged, short, in addition to the bell (Rule 35(g))."},
+ {mode:"sound", p:"ssss", a:"Pilot vessel identity signal", why:"Four short blasts, optional for a pilot vessel on duty in fog (Rule 35(k))."},
+ {mode:"sound", p:"sssssssL", a:"General emergency alarm", why:"Seven or more short blasts followed by one long blast (SOLAS / LSA Code)."},
+];
+
+const LIBRARY = [
+ {t:"COLREGs", h:"Steering and sailing rules at a glance", b:`
+  <div class="tbl"><table><tr><th>Rule</th><th>Subject</th><th>Key point</th></tr>
+  <tr><td>4–10</td><td>Any visibility</td><td>Apply in any condition of visibility</td></tr>
+  <tr><td>5</td><td>Look-out</td><td>Sight, hearing and all available means</td></tr>
+  <tr><td>6</td><td>Safe speed</td><td>Stop within appropriate distance; factors listed for all vessels and radar vessels</td></tr>
+  <tr><td>7</td><td>Risk of collision</td><td>Steady bearing = risk; doubt = risk; no assumptions on scanty radar info</td></tr>
+  <tr><td>8</td><td>Action</td><td>Positive, ample time, readily apparent, safe passing distance</td></tr>
+  <tr><td>9</td><td>Narrow channels</td><td>Keep to starboard side; don't impede</td></tr>
+  <tr><td>10</td><td>TSS</td><td>Proper lane; cross at right angles (heading)</td></tr>
+  <tr><td>11–18</td><td>In sight of one another</td><td>Only apply when vessels can see each other visually</td></tr>
+  <tr><td>12</td><td>Sailing vessels</td><td>Port tack gives way; windward gives way</td></tr>
+  <tr><td>13</td><td>Overtaking</td><td>More than 22.5° abaft beam; overtaker keeps clear</td></tr>
+  <tr><td>14</td><td>Head-on</td><td>Both alter to starboard</td></tr>
+  <tr><td>15</td><td>Crossing</td><td>Other on your starboard side: you give way, avoid crossing ahead</td></tr>
+  <tr><td>16</td><td>Give-way</td><td>Early and substantial action</td></tr>
+  <tr><td>17</td><td>Stand-on</td><td>Keep course and speed; may act; must act; not to port for a vessel on your port side</td></tr>
+  <tr><td>18</td><td>Responsibilities</td><td>NUC/RAM &gt; fishing &gt; sailing &gt; power; avoid impeding CBD</td></tr>
+  <tr><td>19</td><td>Restricted visibility</td><td>Not in sight of one another; no stand-on vessel</td></tr>
+  </table></div>`},
+ {t:"COLREGs", h:"Rule 17: action by the stand-on vessel", b:`
+  <ul><li><b>(a)(i)</b> Keep course and speed.</li>
+  <li><b>(a)(ii)</b> May take action by her manoeuvre alone as soon as it becomes apparent the give-way vessel isn't taking appropriate action.</li>
+  <li><b>(b)</b> Shall take action when collision can't be avoided by the give-way vessel alone.</li>
+  <li><b>(c)</b> A power-driven vessel acting under (a)(ii) in a crossing situation shall, if circumstances admit, not alter course to port for a vessel on her own port side.</li>
+  <li><b>(d)</b> This doesn't relieve the give-way vessel of her obligation to keep out of the way.</li></ul>
+  <p>Sound five short blasts first (Rule 34(d)) when in doubt about the give-way vessel's action.</p>`},
+ {t:"COLREGs", h:"Rule 19: conduct in restricted visibility", b:`
+  <ul><li>Applies to vessels <b>not in sight of one another</b> in or near an area of restricted visibility.</li>
+  <li>Safe speed for the conditions; power-driven vessels have engines ready for immediate manoeuvre.</li>
+  <li>A vessel detecting another by radar alone determines whether a close-quarters situation is developing and/or risk exists, and if so takes avoiding action in ample time. If that's an alteration of course, avoid, so far as possible:
+   <ul><li>an alteration to port for a vessel forward of the beam, other than a vessel being overtaken;</li>
+   <li>an alteration towards a vessel abeam or abaft the beam.</li></ul></li>
+  <li>Hearing a fog signal apparently forward of the beam, or unable to avoid close quarters with a vessel forward of the beam: reduce speed to the minimum to keep her on course, take all way off if necessary, and navigate with extreme caution until danger is over.</li></ul>`},
+ {t:"COLREGs", h:"Definitions (Rule 3)", b:`
+  <ul><li><b>Power-driven vessel</b>: any vessel propelled by machinery.</li>
+  <li><b>Sailing vessel</b>: under sail, provided propelling machinery, if fitted, isn't being used.</li>
+  <li><b>Engaged in fishing</b>: nets, lines, trawls or other gear that restricts manoeuvrability (not trolling lines).</li>
+  <li><b>Not under command</b>: through some exceptional circumstance unable to manoeuvre as required by the Rules.</li>
+  <li><b>Restricted in ability to manoeuvre</b>: from the nature of her work, e.g. cable or pipe laying, dredging, surveying, underwater ops, replenishment underway, aircraft ops, mine clearance, restrictive towing.</li>
+  <li><b>Constrained by her draught</b>: power-driven vessel severely restricted by draught relative to available depth and width of water.</li>
+  <li><b>Underway</b>: not at anchor, made fast to the shore, or aground. <b>Making way</b>: moving through the water.</li>
+  <li><b>Length / breadth</b>: length overall and greatest breadth.</li>
+  <li><b>In sight of one another</b>: only when one can be observed visually from the other.</li></ul>`},
+ {t:"Lights & shapes", h:"Light arcs and ranges (Rules 21–22)", b:`
+  <div class="tbl"><table><tr><th>Light</th><th>Arc</th><th>50 m+</th><th>12–50 m</th><th>&lt;12 m</th></tr>
+  <tr><td>Masthead (white)</td><td>225°</td><td>6 nm</td><td>5 nm (3 if &lt;20 m)</td><td>2 nm</td></tr>
+  <tr><td>Sidelights</td><td>112.5° each</td><td>3 nm</td><td>2 nm</td><td>1 nm</td></tr>
+  <tr><td>Sternlight (white)</td><td>135°</td><td>3 nm</td><td>2 nm</td><td>2 nm</td></tr>
+  <tr><td>Towing (yellow)</td><td>135°</td><td>3 nm</td><td>2 nm</td><td>2 nm</td></tr>
+  <tr><td>All-round</td><td>360°</td><td>3 nm</td><td>2 nm</td><td>2 nm</td></tr>
+  </table></div>
+  <p>Masthead and sidelights reach 22.5° abaft the beam; the sternlight covers the remaining 135° astern. A flashing light flashes 120 or more times a minute.</p>`},
+ {t:"Lights & shapes", h:"Lights and shapes by vessel type", b:`
+  <div class="tbl"><table><tr><th>Vessel</th><th>Night</th><th>Day</th></tr>
+  <tr><td>Power-driven underway</td><td>Masthead (2nd aft &amp; higher if 50 m+), sidelights, sternlight</td><td>–</td></tr>
+  <tr><td>Towing (tow ≤200 m)</td><td>2 masthead vertical, sidelights, sternlight, yellow towing light above sternlight</td><td>–</td></tr>
+  <tr><td>Towing (tow &gt;200 m)</td><td>3 masthead vertical + as above</td><td>Diamond</td></tr>
+  <tr><td>Sailing</td><td>Sidelights, sternlight; optional red over green all-round at masthead</td><td>Cone apex down if motorsailing</td></tr>
+  <tr><td>Trawling</td><td>Green over white all-round (+ masthead abaft if 50 m+); sidelights &amp; stern if making way</td><td>Two cones apexes together</td></tr>
+  <tr><td>Fishing (other)</td><td>Red over white all-round; white all-round toward gear &gt;150 m</td><td>Two cones apexes together; cone apex up toward gear</td></tr>
+  <tr><td>NUC</td><td>2 all-round red vertical; sidelights &amp; stern if making way</td><td>Two balls</td></tr>
+  <tr><td>RAM</td><td>Red-white-red all-round; + masthead, sides, stern if making way; + anchor lights at anchor</td><td>Ball-diamond-ball</td></tr>
+  <tr><td>RAM with obstruction</td><td>+ 2 red vertical on obstructed side, 2 green on passing side</td><td>+ 2 balls obstructed side, 2 diamonds passing side</td></tr>
+  <tr><td>Mine clearance</td><td>3 all-round green (masthead + each yardarm) + PDV lights</td><td>3 balls (masthead + yardarms)</td></tr>
+  <tr><td>CBD</td><td>3 all-round red vertical + PDV lights</td><td>Cylinder</td></tr>
+  <tr><td>Pilot on duty</td><td>White over red all-round; + sides &amp; stern underway</td><td>(Flag H)</td></tr>
+  <tr><td>At anchor</td><td>All-round white forward, lower one aft (single light if &lt;50 m); deck lights if 100 m+</td><td>One ball</td></tr>
+  <tr><td>Aground</td><td>Anchor lights + 2 all-round red vertical</td><td>Three balls</td></tr>
+  <tr><td>Air-cushion (non-displacement)</td><td>PDV lights + all-round flashing yellow</td><td>–</td></tr>
+  <tr><td>WIG craft (take-off, landing, near surface)</td><td>PDV lights + high-intensity all-round flashing red</td><td>–</td></tr>
+  </table></div>`},
+ {t:"Sound signals", h:"Manoeuvring and warning signals (Rule 34)", b:`
+  <p>Short blast about 1 s; prolonged blast 4–6 s. Only used by vessels <b>in sight of one another</b>, except the bend signal.</p>
+  <div class="tbl"><table><tr><th>Signal</th><th>Meaning</th></tr>
+  <tr><td class="lc">•</td><td>Altering course to starboard</td></tr>
+  <tr><td class="lc">• •</td><td>Altering course to port</td></tr>
+  <tr><td class="lc">• • •</td><td>Operating astern propulsion</td></tr>
+  <tr><td class="lc">• • • • •</td><td>Doubt / don't understand your intentions</td></tr>
+  <tr><td class="lc">— — •</td><td>Intend to overtake on your starboard side (narrow channel)</td></tr>
+  <tr><td class="lc">— — • •</td><td>Intend to overtake on your port side</td></tr>
+  <tr><td class="lc">— • — •</td><td>Agreement to be overtaken</td></tr>
+  <tr><td class="lc">—</td><td>Approaching a bend or obstruction (answered with —)</td></tr>
+  </table></div>
+  <p>Light signals may supplement: one flash = starboard, two = port, three = astern; each flash about 1 s, at least 10 s between signals.</p>`},
+ {t:"Sound signals", h:"Restricted visibility signals (Rule 35)", b:`
+  <div class="tbl"><table><tr><th>Vessel</th><th>Signal</th><th>Interval</th></tr>
+  <tr><td>Power-driven, making way</td><td class="lc">—</td><td>≤ 2 min</td></tr>
+  <tr><td>Power-driven, underway but stopped</td><td class="lc">— —</td><td>≤ 2 min</td></tr>
+  <tr><td>NUC, RAM, CBD, sailing, fishing, towing or pushing</td><td class="lc">— • •</td><td>≤ 2 min</td></tr>
+  <tr><td>Towed (last vessel, if manned)</td><td class="lc">— • • •</td><td>Right after the tug's signal</td></tr>
+  <tr><td>At anchor</td><td>Rapid bell ~5 s (100 m+: bell forward, then gong aft); may add <span class="lc">• — •</span></td><td>≤ 1 min</td></tr>
+  <tr><td>Aground</td><td>3 strokes, rapid bell, 3 strokes (+ gong 100 m+)</td><td>≤ 1 min</td></tr>
+  <tr><td>Pilot vessel (optional)</td><td class="lc">• • • •</td><td>With other signals</td></tr>
+  <tr><td>Under 12 m</td><td>Not obliged, but some efficient signal</td><td>≤ 2 min</td></tr>
+  </table></div>`},
+ {t:"Sound signals", h:"Distress signals (Annex IV)", b:`
+  <ul><li>Gun or explosive signal fired at about 1-minute intervals.</li>
+  <li>Continuous sounding of any fog-signalling apparatus.</li>
+  <li>Rockets or shells throwing red stars, fired one at a time at short intervals.</li>
+  <li>SOS (··· — — — ···) by any signalling method; the spoken word MAYDAY by radio.</li>
+  <li>Code flags N over C; a square flag with a ball (or anything like one) above or below it.</li>
+  <li>Flames on the vessel (burning tar barrel, oil, etc.).</li>
+  <li>A rocket parachute flare or hand flare showing a red light; orange smoke.</li>
+  <li>Slowly and repeatedly raising and lowering arms outstretched to each side.</li>
+  <li>DSC distress alert; signals from EPIRBs, SARTs and other approved radiocommunication systems.</li></ul>`},
+ {t:"Buoyage", h:"IALA Region A: lateral marks", b:`
+  <p>Direction of buoyage: generally clockwise around continents, or inbound from seaward. Shown on charts by a magenta arrow.</p>
+  <div class="tbl"><table><tr><th>Mark</th><th>Colour / shape</th><th>Topmark</th><th>Light</th></tr>
+  <tr><td>Port hand</td><td>Red, can or pillar</td><td>Red can</td><td class="lc">R, any except Fl(2+1)</td></tr>
+  <tr><td>Starboard hand</td><td>Green, conical or pillar</td><td>Green cone, point up</td><td class="lc">G, any except Fl(2+1)</td></tr>
+  <tr><td>Preferred channel to starboard</td><td>Red, broad green band</td><td>Red can</td><td class="lc">Fl(2+1) R</td></tr>
+  <tr><td>Preferred channel to port</td><td>Green, broad red band</td><td>Green cone</td><td class="lc">Fl(2+1) G</td></tr>
+  </table></div>
+  <p>Region B (the Americas, Japan, Korea, Philippines) reverses the colours: 'red right returning'.</p>`},
+ {t:"Buoyage", h:"Cardinal, isolated danger, safe water, special and wreck marks", b:`
+  <div class="tbl"><table><tr><th>Mark</th><th>Colour</th><th>Topmark</th><th>Light (white unless stated)</th></tr>
+  <tr><td>North cardinal</td><td>Black over yellow</td><td>▲▲ points up</td><td class="lc">Q / VQ</td></tr>
+  <tr><td>East cardinal</td><td>Black, yellow band</td><td>▲▼ bases together</td><td class="lc">Q(3) 10s / VQ(3) 5s</td></tr>
+  <tr><td>South cardinal</td><td>Yellow over black</td><td>▼▼ points down</td><td class="lc">Q(6)+LFl 15s / VQ(6)+LFl 10s</td></tr>
+  <tr><td>West cardinal</td><td>Yellow, black band</td><td>▼▲ points together</td><td class="lc">Q(9) 15s / VQ(9) 10s</td></tr>
+  <tr><td>Isolated danger</td><td>Black, red band(s)</td><td>Two black balls</td><td class="lc">Fl(2)</td></tr>
+  <tr><td>Safe water</td><td>Red &amp; white vertical stripes</td><td>Red ball</td><td class="lc">Iso / Oc / LFl 10s / Mo(A)</td></tr>
+  <tr><td>Special</td><td>Yellow</td><td>Yellow X</td><td class="lc">Y, any not used for white marks</td></tr>
+  <tr><td>Emergency wreck</td><td>Blue &amp; yellow vertical stripes</td><td>Yellow upright cross</td><td class="lc">Al.Bu.Y</td></tr>
+  </table></div>
+  <p>Cardinal topmarks point to where the black is on the buoy. A new danger may be marked with a duplicate mark until promulgated.</p>`},
+ {t:"GMDSS", h:"Sea areas, equipment and frequencies", b:`
+  <div class="tbl"><table><tr><th>Area</th><th>Coverage</th><th>Typical equipment (plus all-area items)</th></tr>
+  <tr><td>A1</td><td>VHF DSC coast station, ~20–30 nm</td><td>VHF with DSC</td></tr>
+  <tr><td>A2</td><td>MF DSC coast station, ~100–150 nm</td><td>+ MF/DSC</td></tr>
+  <tr><td>A3</td><td>Inmarsat geostationary, ~70°N–70°S</td><td>+ MF/HF DSC or recognised satellite terminal</td></tr>
+  <tr><td>A4</td><td>Polar regions outside A1–A3</td><td>+ MF/HF DSC</td></tr>
+  </table></div>
+  <p>All areas: VHF DSC, NAVTEX (518 kHz), EGC receiver where needed, 406 MHz EPIRB, SARTs (radar or AIS), portable VHFs for survival craft.</p>
+  <ul><li>Distress: VHF ch 70 DSC / ch 16 voice; MF 2187.5 kHz DSC / 2182 kHz voice.</li>
+  <li>Priorities: <b>MAYDAY</b> distress, <b>PAN-PAN</b> urgency, <b>SÉCURITÉ</b> safety.</li>
+  <li>A false alert must be cancelled at once by voice on the associated frequency.</li></ul>`},
+ {t:"Emergencies", h:"Man-overboard turns compared", b:`
+  <div class="tbl"><table><tr><th>Turn</th><th>Method</th><th>Best for</th></tr>
+  <tr><td>Williamson</td><td>Hard over; at 60° off course, hard over the other way; at 20° short of reciprocal, midships</td><td>Immediate action at night or in poor visibility; returns along own track</td></tr>
+  <tr><td>Anderson (single turn)</td><td>Hard over toward the person; after ~250° deviation, midships and stop to approach</td><td>Fastest, when the person is in sight; harder for single-screw ships</td></tr>
+  <tr><td>Scharnow</td><td>Hard over; after ~240° deviation, hard over the other way; at 20° short of reciprocal, midships</td><td>Delayed action (person missed for a while); returns to own wake, saves distance</td></tr>
+  </table></div>`},
+ {t:"Emergencies", h:"Emergency checklist prompts", b:`
+  <ul><li><b>Fire:</b> alarm, locate, inform, contain (doors, vents, boundary cooling), extinguish, headcount, prepare LSA.</li>
+  <li><b>Flooding:</b> alarm, WT doors closed, locate source, pump, assess stability, consider beaching, distress/urgency.</li>
+  <li><b>Grounding:</b> stop engines, alarm, WT doors, lights/shapes, sound tanks, soundings around hull, tide state, don't rush astern, report.</li>
+  <li><b>Collision:</b> alarm, minimise damage, WT doors, assess, assist the other vessel, exchange details, save VDR.</li>
+  <li><b>Steering failure:</b> change pump/mode, emergency steering, NUC signals, warn traffic, consider anchoring.</li>
+  <li><b>Blackout:</b> inform Master/engine, emergency power, NUC lights, warn traffic, prepare anchor if shoal water.</li>
+  <li><b>Abandon ship:</b> Master's order, general alarm, distress alert, EPIRB/SART/VHF to craft, warm clothing, lifejackets, launch, stay together.</li>
+  <li><b>Heavy weather:</b> secure cargo and loose gear, close openings, lifelines, adjust ballast, ease motion with course/speed, beware synchronous/parametric rolling.</li></ul>`},
+ {t:"Safety & LSA", h:"SOLAS chapters", b:`
+  <div class="tbl"><table><tr><th>Ch.</th><th>Subject</th></tr>
+  <tr><td>I</td><td>General provisions (surveys, certificates)</td></tr>
+  <tr><td>II-1</td><td>Construction: subdivision, stability, machinery, electrical</td></tr>
+  <tr><td>II-2</td><td>Fire protection, detection and extinction</td></tr>
+  <tr><td>III</td><td>Life-saving appliances and arrangements</td></tr>
+  <tr><td>IV</td><td>Radiocommunications (GMDSS)</td></tr>
+  <tr><td>V</td><td>Safety of navigation</td></tr>
+  <tr><td>VI</td><td>Carriage of cargoes and oil fuels</td></tr>
+  <tr><td>VII</td><td>Carriage of dangerous goods</td></tr>
+  <tr><td>VIII</td><td>Nuclear ships</td></tr>
+  <tr><td>IX</td><td>Management for safe operation (ISM)</td></tr>
+  <tr><td>X</td><td>High-speed craft</td></tr>
+  <tr><td>XI-1</td><td>Special measures for maritime safety</td></tr>
+  <tr><td>XI-2</td><td>Maritime security (ISPS)</td></tr>
+  <tr><td>XII</td><td>Bulk carriers</td></tr>
+  <tr><td>XIII</td><td>Verification of compliance</td></tr>
+  <tr><td>XIV</td><td>Ships in polar waters (Polar Code)</td></tr>
+  </table></div>`},
+ {t:"Safety & LSA", h:"Drills and maintenance intervals (cargo ships)", b:`
+  <div class="tbl"><table><tr><th>Item</th><th>Interval</th></tr>
+  <tr><td>Abandon-ship and fire drill per crew member</td><td>Monthly (within 24 h of sailing if &gt;25% new)</td></tr>
+  <tr><td>Lifeboat launched and manoeuvred</td><td>Every 3 months</td></tr>
+  <tr><td>Rescue boat launched</td><td>Monthly where practicable, at least every 3 months</td></tr>
+  <tr><td>Enclosed space entry drill</td><td>Every 2 months</td></tr>
+  <tr><td>Emergency steering drill</td><td>Every 3 months</td></tr>
+  <tr><td>Liferaft service</td><td>Not exceeding 12 months</td></tr>
+  <tr><td>On-board training in LSA use</td><td>New crew within 2 weeks of joining</td></tr>
+  </table></div>`},
+ {t:"Watchkeeping", h:"OOW principles (STCW Code A-VIII/2)", b:`
+  <ul><li>The OOW is the Master's representative and primarily responsible for the safe navigation of the ship and compliance with COLREGs.</li>
+  <li>Don't leave the bridge without being properly relieved.</li>
+  <li>Use engines and sound signals without hesitation when needed (give notice to the engine room where possible).</li>
+  <li>Know the ship's manoeuvring characteristics and stopping distances.</li>
+  <li>Check position at frequent intervals by more than one method; check compass errors each watch.</li>
+  <li>Keep a proper record of movements and activities in the logbook.</li>
+  <li>The OOW may be sole look-out in daylight only after careful assessment, with assistance immediately available.</li></ul>`},
+ {t:"Pollution", h:"MARPOL quick reference", b:`
+  <div class="tbl"><table><tr><th>Annex</th><th>Covers</th><th>Key records</th></tr>
+  <tr><td>I</td><td>Oil</td><td>Oil Record Book Part I (machinery), Part II (cargo/ballast, tankers); IOPP certificate; SOPEP</td></tr>
+  <tr><td>II</td><td>Noxious liquids in bulk</td><td>Cargo Record Book; P&amp;A Manual; SMPEP</td></tr>
+  <tr><td>III</td><td>Packaged harmful substances</td><td>Marking, labelling, documentation (IMDG Code)</td></tr>
+  <tr><td>IV</td><td>Sewage</td><td>ISPP certificate</td></tr>
+  <tr><td>V</td><td>Garbage</td><td>Garbage Management Plan, Garbage Record Book, placards</td></tr>
+  <tr><td>VI</td><td>Air pollution</td><td>IAPP, Bunker Delivery Notes (3 years), fuel changeover log, ODS record book</td></tr>
+  </table></div>`},
+ {t:"Stability", h:"Key terms", b:`
+  <ul><li><b>K</b> keel, <b>B</b> centre of buoyancy, <b>G</b> centre of gravity, <b>M</b> transverse metacentre.</li>
+  <li><b>GM = KM − KG</b>. Positive GM is stable at small angles. GZ ≈ GM sin θ at small angles.</li>
+  <li><b>Free surface effect</b>: virtual rise of G from slack tanks; reduce with full/empty tanks and subdivision.</li>
+  <li><b>List</b>: G off the centreline. <b>Loll</b>: negative GM, G on the centreline; correct by lowering G, never by moving weight to the high side.</li>
+  <li><b>IMO intact stability (2008 IS Code)</b>: area under GZ to 30° ≥ 0.055 m·rad; to 40° (or flooding angle) ≥ 0.09; between 30° and 40° ≥ 0.03; GZ ≥ 0.20 m at ≥ 30°; max GZ at ≥ 25°; initial GM ≥ 0.15 m.</li>
+  <li><b>Squat</b>: increases roughly with the square of speed and is greater in shallow, confined water. Reduce speed to reduce it.</li></ul>`},
+ {t:"Navigation", h:"Tides and charts", b:`
+  <ul><li><b>Chart datum</b> in UK waters is about Lowest Astronomical Tide (LAT). Charted depths are below CD; drying heights (underlined) are above CD.</li>
+  <li><b>Springs</b> occur shortly after new and full moon; <b>neaps</b> near the quarters.</li>
+  <li><b>Rule of twelfths</b> (semi-diurnal): the tide rises 1, 2, 3, 3, 2, 1 twelfths of its range in each successive hour.</li>
+  <li><b>Heights of lights</b> are above MHWS. <b>Clearances</b> under bridges are above HAT on recent Admiralty charts.</li>
+  <li>Keep charts and publications corrected from weekly Notices to Mariners, and record corrections.</li></ul>`},
+];
+
+/* ============================================================ STATE */
+
+const KEY = "oow-oral-trainer-v1";
+function loadState() {
+  try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && typeof s === "object") return s; } catch (e) {}
+  return {};
+}
+let state = Object.assign({ oral: {}, cards: {}, quiz: { right: 0, total: 0 }, settings: {} }, loadState());
+function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+
+const $ = (sel, el = document) => el.querySelector(sel);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+function toast(msg) {
+  const t = document.createElement("div"); t.className = "toast"; t.textContent = msg; document.body.appendChild(t);
+  setTimeout(() => t.remove(), 1800);
+}
+function chips(list, current, attr) {
+  return `<div class="chips" role="group">${list.map(x => `<button class="chip" ${attr}="${esc(x)}" aria-pressed="${x === current}">${esc(x)}</button>`).join("")}</div>`;
+}
+const view = $("#view");
+
+/* ============================================================ MOCK ORAL */
+
+const ORAL_TOPICS = ["All", ...new Set(ORAL.map(q => q.t))];
+let oral = { topic: "All", idx: null, shown: false };
+
+function pickOral() {
+  const pool = ORAL.map((q, i) => i).filter(i => oral.topic === "All" || ORAL[i].t === oral.topic);
+  const weight = i => { const r = state.oral[i]; if (!r) return 3; return r.last === "miss" ? 4 : r.last === "part" ? 2 : 1; };
+  let candidates = pool.filter(i => i !== oral.idx); if (!candidates.length) candidates = pool;
+  const total = candidates.reduce((s, i) => s + weight(i), 0);
+  let n = Math.random() * total;
+  for (const i of candidates) { n -= weight(i); if (n <= 0) return i; }
+  return candidates[0];
+}
+
+oral.mode = "all";       // "all" = All mock questions, "mini" = Mini tests
+let test = null;         // { size, topic, ids, i, ratings, shown, done }
+let testSetup = { size: 5, topic: "All" };
+const POINTS = { good: 1, part: 0.5, miss: 0 };
+const RATE_LABEL = { good: "Nailed it", part: "Partly", miss: "Missed it" };
+
+function recordRating(idx, rating) {
+  const r = state.oral[idx] || { n: 0 }; r.n++; r.last = rating; state.oral[idx] = r; save();
+}
+
+// The question card shared by both modes. `shown` reveals the model answer and the rating buttons.
+function questionCard(q, shown, header, skipLabel) {
+  return `<article class="panel stack">
+      <div class="spread"><span class="tag">${esc(q.t)}</span><span class="small muted">${header}</span></div>
+      <p class="q">${esc(q.q)}</p>
+      ${shown ? `
+        <div class="stack">
+          <div class="label">Points to hit</div>
+          <ul class="points">${q.a.map(p => `<li>${esc(p)}</li>`).join("")}</ul>
+          ${q.tip ? `<div class="tip"><b>Examiner tip:</b> ${esc(q.tip)}</div>` : ""}
+          <div class="label">How did you do?</div>
+          <div class="grid3">
+            <button class="btn good" data-rate="good">Nailed it</button>
+            <button class="btn warn" data-rate="part">Partly</button>
+            <button class="btn bad" data-rate="miss">Missed it</button>
+          </div>
+        </div>` :
+        `<button class="btn primary block" id="reveal">Show model answer</button>`}
+      ${skipLabel ? `<button class="btn block" id="skip">${skipLabel}</button>` : ""}
+    </article>`;
+}
+
+function renderOral() {
+  const modeSwitch = `<div class="chips" role="group" aria-label="Mock oral mode">
+      <button class="chip" data-omode="all" aria-pressed="${oral.mode === "all"}">All mock questions</button>
+      <button class="chip" data-omode="mini" aria-pressed="${oral.mode === "mini"}">Mini tests</button></div>`;
+  const body = oral.mode === "all" ? allQuestionsHTML() : miniTestHTML();
+  view.innerHTML = `<section class="stack">
+    <div><h2>Mock oral</h2><p class="lead">Answer out loud as if the examiner had asked you, then check the model answer and be honest with yourself.</p></div>
+    ${modeSwitch}${body}</section>`;
+  view.querySelectorAll("[data-omode]").forEach(b => b.onclick = () => { oral.mode = b.dataset.omode; renderOral(); });
+  if (oral.mode === "all") bindAllQuestions(); else bindMiniTest();
+}
+
+/* ---------- All mock questions */
+function allQuestionsHTML() {
+  if (oral.idx === null || (oral.topic !== "All" && ORAL[oral.idx].t !== oral.topic)) oral.idx = pickOral();
+  const rated = Object.values(state.oral);
+  const nailed = rated.filter(r => r.last === "good").length;
+  return `${chips(ORAL_TOPICS, oral.topic, "data-topic")}
+    <div class="grid3">
+      <div class="stat"><b>${ORAL.length}</b><small>questions</small></div>
+      <div class="stat"><b>${rated.length}</b><small>attempted</small></div>
+      <div class="stat"><b>${nailed}</b><small>nailed last time</small></div>
+    </div>
+    ${questionCard(ORAL[oral.idx], oral.shown, "Examiner asks:", "Skip to another question")}`;
+}
+function bindAllQuestions() {
+  view.querySelectorAll("[data-topic]").forEach(b => b.onclick = () => { oral.topic = b.dataset.topic; oral.idx = pickOral(); oral.shown = false; renderOral(); });
+  const rev = $("#reveal"); if (rev) rev.onclick = () => { oral.shown = true; renderOral(); };
+  $("#skip").onclick = () => { oral.idx = pickOral(); oral.shown = false; renderOral(); };
+  view.querySelectorAll("[data-rate]").forEach(b => b.onclick = () => {
+    recordRating(oral.idx, b.dataset.rate);
+    oral.idx = pickOral(); oral.shown = false; renderOral(); window.scrollTo({ top: 0 });
+  });
+}
+
+/* ---------- Mini tests */
+function startTest() {
+  const pool = ORAL.map((q, i) => i).filter(i => testSetup.topic === "All" || ORAL[i].t === testSetup.topic);
+  const ids = shuffle(pool).slice(0, Math.min(testSetup.size, pool.length));
+  test = { size: ids.length, topic: testSetup.topic, ids, i: 0, ratings: [], shown: false, done: false };
+}
+function testScore(t) { return t.ratings.reduce((s, r) => s + POINTS[r], 0); }
+function encouragement(pct) {
+  if (pct >= 90) return { title: "Outstanding work!", text: "That's the standard examiners are looking for. Keep it fresh with a few tests each day and you'll walk into the exam confident." };
+  if (pct >= 70) return { title: "Well done!", text: "A strong result. Go over the points you missed below, and you'll soon be nailing these every time." };
+  if (pct >= 50) return { title: "Good effort!", text: "You're getting there. Read through the model answers for the ones that tripped you up, then have another go. Every test makes the next one easier." };
+  return { title: "Keep at it!", text: "Everyone starts somewhere, and every test teaches you something. Review the answers below, try the flashcards for these topics, and give it another shot. You've got this." };
+}
+const fmtScore = n => Number.isInteger(n) ? String(n) : n.toFixed(1);
+
+function miniTestHTML() {
+  const history = state.tests || [];
+  // Set-up screen
+  if (!test) {
+    const recent = history.slice(-5).reverse();
+    const sizeChips = [5, 10].map(n => `<button class="chip" data-size="${n}" aria-pressed="${testSetup.size === n}">${n} questions</button>`).join("");
+    return `<div class="panel stack">
+        <h3>Start a mini test</h3>
+        <p class="muted small">A quick round of random questions, like a short session with the examiner. Rate each answer honestly and you'll get a score at the end.</p>
+        <div class="label">Length</div><div class="chips" role="group">${sizeChips}</div>
+        <div class="label">Topic</div>${chips(ORAL_TOPICS, testSetup.topic, "data-ttopic")}
+        <button class="btn primary block" id="startTest">Start test</button>
+      </div>
+      ${recent.length ? `<div class="panel stack"><h3>Recent tests</h3>
+        <div class="tbl"><table><tr><th>Date</th><th>Topic</th><th>Score</th></tr>
+        ${recent.map(h => `<tr><td>${esc(new Date(h.at).toLocaleDateString(undefined, { day: "numeric", month: "short" }))}</td><td>${esc(h.topic)}</td><td>${fmtScore(h.score)} / ${h.size} (${Math.round(h.score / h.size * 100)}%)</td></tr>`).join("")}
+        </table></div></div>` : ""}`;
+  }
+  // Results screen
+  if (test.done) {
+    const score = testScore(test), pct = Math.round(score / test.size * 100), msg = encouragement(pct);
+    const best = Math.max(...history.filter(h => h.size === test.size).map(h => Math.round(h.score / h.size * 100)));
+    return `<div class="panel stack" style="text-align:center">
+        <div class="label">Test complete</div>
+        <div style="font:700 56px/1 var(--display);color:var(--accent);font-variant-numeric:tabular-nums">${pct}%</div>
+        <div class="muted">${fmtScore(score)} out of ${test.size}${best === pct && history.length > 1 ? " · your best yet!" : ""}</div>
+        <h3>${msg.title}</h3><p style="margin:0 auto;max-width:48ch">${msg.text}</p>
+      </div>
+      <div class="panel stack"><h3>Your answers</h3>
+        ${test.ids.map((id, k) => { const r = test.ratings[k]; return `<details class="entry">
+            <summary><span>${esc(ORAL[id].q)}</span><span class="tag" style="flex:none;${r === "good" ? "color:var(--good);background:var(--good-soft)" : r === "part" ? "color:var(--warn);background:var(--warn-soft)" : "color:var(--bad);background:var(--bad-soft)"}">${RATE_LABEL[r]}</span></summary>
+            <div class="entry-body"><ul class="points">${ORAL[id].a.map(p => `<li>${esc(p)}</li>`).join("")}</ul></div></details>`; }).join("")}
+      </div>
+      <div class="grid3" style="grid-template-columns:1fr 1fr">
+        <button class="btn primary" id="again">Try another test</button>
+        <button class="btn" id="newSetup">Change settings</button>
+      </div>`;
+  }
+  // A test in progress
+  const pct = Math.round(test.i / test.size * 100);
+  return `<div class="stack" style="gap:6px">
+      <div class="spread small"><b>Question ${test.i + 1} of ${test.size}</b><span class="muted">${esc(test.topic === "All" ? "All topics" : test.topic)}</span></div>
+      <div style="height:6px;background:var(--sunk);border-radius:99px;overflow:hidden"><div style="height:100%;width:${pct}%;background:var(--accent)"></div></div>
+    </div>
+    ${questionCard(ORAL[test.ids[test.i]], test.shown, "Examiner asks:", "")}
+    <button class="btn block" id="quit">End test early</button>`;
+}
+function bindMiniTest() {
+  view.querySelectorAll("[data-size]").forEach(b => b.onclick = () => { testSetup.size = +b.dataset.size; renderOral(); });
+  view.querySelectorAll("[data-ttopic]").forEach(b => b.onclick = () => { testSetup.topic = b.dataset.ttopic; renderOral(); });
+  const st = $("#startTest"); if (st) st.onclick = () => { startTest(); renderOral(); window.scrollTo({ top: 0 }); };
+  const rev = $("#reveal"); if (rev) rev.onclick = () => { test.shown = true; renderOral(); };
+  view.querySelectorAll("[data-rate]").forEach(b => b.onclick = () => {
+    recordRating(test.ids[test.i], b.dataset.rate);
+    test.ratings.push(b.dataset.rate); test.i++; test.shown = false;
+    if (test.i >= test.size) {
+      test.done = true;
+      state.tests = (state.tests || []).concat({ at: Date.now(), size: test.size, topic: test.topic, score: testScore(test) }).slice(-50);
+      save();
+    }
+    renderOral(); window.scrollTo({ top: 0 });
+  });
+  const q = $("#quit"); if (q) q.onclick = () => { test = null; renderOral(); };
+  const ag = $("#again"); if (ag) ag.onclick = () => { startTest(); renderOral(); window.scrollTo({ top: 0 }); };
+  const ns = $("#newSetup"); if (ns) ns.onclick = () => { test = null; renderOral(); };
+}
+
+/* ============================================================ LIGHTS, SHAPES & SOUNDS */
+
+const MODES = { night: "Lights at night", day: "Day shapes", sound: "Sound signals" };
+let quiz = { mode: "night", item: null, opts: [], picked: null };
+
+function nightSVG(item) {
+  const col = { w: "var(--lt-white)", r: "var(--lt-red)", g: "var(--lt-green)", y: "var(--lt-yellow)" };
+  const lights = item.l.map(([x, y, c, fl]) => `<g class="${fl ? "flash" : ""}">
+      <circle cx="${x}" cy="${y}" r="9" fill="${col[c]}" opacity=".22"/><circle cx="${x}" cy="${y}" r="3.4" fill="${col[c]}"/></g>`).join("");
+  return `<svg class="scene" viewBox="0 0 200 120" role="img" aria-label="Lights seen at night">
+    <rect width="200" height="120" fill="var(--night)"/>
+    <line x1="0" y1="100" x2="200" y2="100" stroke="var(--night-line)" stroke-width="1"/>
+    ${lights}</svg>`;
+}
+function shapeSVG([x, y, type]) {
+  const s = "var(--shape)";
+  switch (type) {
+    case "ball": return `<circle cx="${x}" cy="${y}" r="6" fill="${s}"/>`;
+    case "diamond": return `<polygon points="${x},${y - 8} ${x + 6},${y} ${x},${y + 8} ${x - 6},${y}" fill="${s}"/>`;
+    case "coneUp": return `<polygon points="${x},${y - 6} ${x + 6},${y + 6} ${x - 6},${y + 6}" fill="${s}"/>`;
+    case "coneDown": return `<polygon points="${x - 6},${y - 6} ${x + 6},${y - 6} ${x},${y + 6}" fill="${s}"/>`;
+    case "cylinder": return `<rect x="${x - 5}" y="${y - 8}" width="10" height="16" fill="${s}"/>`;
+  }
+  return "";
+}
+function daySVG(item) {
+  const mast = `<line x1="100" y1="16" x2="100" y2="90" stroke="var(--shape)" stroke-width="1.6"/>`;
+  const yard = item.yard ? `<line x1="66" y1="40" x2="134" y2="40" stroke="var(--shape)" stroke-width="1.4"/>
+      ${item.s.filter(([x]) => x !== 100).map(([x, y]) => `<line x1="${x}" y1="40" x2="${x}" y2="${y}" stroke="var(--shape)" stroke-width=".8"/>`).join("")}` : "";
+  return `<svg class="scene" viewBox="0 0 200 120" role="img" aria-label="Day shapes on a vessel">
+    <rect width="200" height="120" fill="var(--day-sky)"/>
+    <rect y="100" width="200" height="20" fill="var(--day-sea)"/>
+    ${mast}${yard}
+    <polygon points="34,90 172,90 160,104 44,104" fill="var(--shape)"/>
+    <rect x="132" y="76" width="26" height="14" fill="var(--shape)"/>
+    ${item.s.map(shapeSVG).join("")}</svg>`;
+}
+function patternText(p) { return p.split("").map(c => c === "s" ? "•" : "—").join(" "); }
+
+let audioCtx = null, playing = false;
+async function playPattern(p) {
+  if (playing) return;
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === "suspended") await audioCtx.resume();
+  } catch (e) { toast("Sound isn't available on this device"); return; }
+  playing = true;
+  const real = !!state.settings.realTiming;
+  const dur = { s: real ? 1 : 0.5, l: real ? 4.5 : 2, L: real ? 4.5 : 2 }, gap = real ? 1 : 0.45;
+  let t = audioCtx.currentTime + 0.05;
+  for (const c of p) {
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain(), f = audioCtx.createBiquadFilter();
+    o.type = "sawtooth"; o.frequency.value = 140; f.type = "lowpass"; f.frequency.value = 900;
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.25, t + 0.05);
+    g.gain.setValueAtTime(0.25, t + dur[c] - 0.06); g.gain.linearRampToValueAtTime(0, t + dur[c]);
+    o.connect(f).connect(g).connect(audioCtx.destination); o.start(t); o.stop(t + dur[c] + 0.02);
+    t += dur[c] + gap;
+  }
+  setTimeout(() => { playing = false; }, (t - audioCtx.currentTime) * 1000);
+}
+
+function newQuizItem() {
+  const pool = LIGHTS.filter(x => x.mode === quiz.mode && x !== quiz.item);
+  quiz.item = pool[Math.floor(Math.random() * pool.length)];
+  const wrong = shuffle(LIGHTS.filter(x => x.mode === quiz.mode && x !== quiz.item)).slice(0, 3).map(x => x.a);
+  quiz.opts = shuffle([quiz.item.a, ...wrong]);
+  quiz.picked = null;
+}
+
+function renderLights() {
+  if (!quiz.item || quiz.item.mode !== quiz.mode) newQuizItem();
+  const it = quiz.item, q = state.quiz;
+  const pct = q.total ? Math.round(q.right / q.total * 100) : 0;
+  const visual = it.mode === "night" ? nightSVG(it) : it.mode === "day" ? daySVG(it) :
+    `<div class="pattern" aria-label="Sound signal">${patternText(it.p)}</div>
+     <div class="row"><button class="btn primary" id="play">▶ Play signal</button>
+     <label class="small row" style="gap:6px"><input type="checkbox" id="real" ${state.settings.realTiming ? "checked" : ""}> Real length (1 s short, 4–6 s prolonged)</label></div>`;
+  view.innerHTML = `
+   <section class="stack">
+    <div><h2>Lights, shapes &amp; sounds</h2><p class="lead">Identify the vessel or signal. Every answer tells you why.</p></div>
+    <div class="chips" role="group">${Object.entries(MODES).map(([k, v]) => `<button class="chip" data-mode="${k}" aria-pressed="${k === quiz.mode}">${v}</button>`).join("")}</div>
+    <div class="grid3">
+      <div class="stat"><b>${q.right}</b><small>correct</small></div>
+      <div class="stat"><b>${q.total}</b><small>answered</small></div>
+      <div class="stat"><b>${pct}%</b><small>score</small></div>
+    </div>
+    <article class="panel stack">
+      <div class="label">${it.mode === "sound" ? "What does this signal mean?" : "What are you looking at?"}</div>
+      ${visual}
+      <div class="opts">${quiz.opts.map((o, i) => {
+        let cls = "";
+        if (quiz.picked !== null) { if (o === it.a) cls = "right"; else if (i === quiz.picked) cls = "wrong"; }
+        return `<button class="opt ${cls}" data-opt="${i}" ${quiz.picked !== null ? "disabled" : ""}>${esc(o)}</button>`;
+      }).join("")}</div>
+      ${quiz.picked !== null ? `<div class="tip"><b>${quiz.opts[quiz.picked] === it.a ? "Correct." : "Not quite."}</b> ${esc(it.why)}</div>
+        <button class="btn primary block" id="next">Next</button>` : ""}
+    </article>
+   </section>`;
+  view.querySelectorAll("[data-mode]").forEach(b => b.onclick = () => { quiz.mode = b.dataset.mode; newQuizItem(); renderLights(); });
+  view.querySelectorAll("[data-opt]").forEach(b => b.onclick = () => {
+    quiz.picked = +b.dataset.opt; state.quiz.total++; if (quiz.opts[quiz.picked] === it.a) state.quiz.right++; save(); renderLights();
+  });
+  const nx = $("#next"); if (nx) nx.onclick = () => { newQuizItem(); renderLights(); };
+  const pl = $("#play"); if (pl) pl.onclick = () => playPattern(it.p);
+  const rl = $("#real"); if (rl) rl.onchange = () => { state.settings.realTiming = rl.checked; save(); };
+}
+
+/* ============================================================ FLASHCARDS (Leitner boxes) */
+
+const DAY = 864e5, INTERVAL = [0, 0, 1, 3, 7, 16]; // days until due again, by box 1-5
+const CARD_TOPICS = ["All", ...new Set(CARDS.map(c => c.t))];
+CARDS.forEach((c, i) => c.id = c.t + "|" + c.f);
+let deck = { topic: "All", current: null, flipped: false, ahead: false, backup: false };
+
+const cardState = c => state.cards[c.id] || { box: 1, due: 0 };
+function dueCards() {
+  const now = Date.now();
+  return CARDS.filter(c => (deck.topic === "All" || c.t === deck.topic) && (deck.ahead || cardState(c).due <= now))
+    .sort((a, b) => cardState(a).due - cardState(b).due);
+}
+function nextCard() {
+  const due = dueCards();
+  if (!due.length) return null;
+  const firstUnseen = due.filter(c => !state.cards[c.id]);
+  const seenDue = due.filter(c => state.cards[c.id]);
+  // Review cards already in progress first, then introduce new ones, a little shuffled.
+  const pool = seenDue.length ? seenDue.slice(0, 5) : firstUnseen.slice(0, 8);
+  const pick = shuffle(pool.filter(c => c !== deck.current))[0] || pool[0];
+  return pick;
+}
+function whenNext() {
+  const ds = CARDS.filter(c => deck.topic === "All" || c.t === deck.topic).map(c => cardState(c).due).filter(d => d > Date.now());
+  if (!ds.length) return "";
+  const mins = Math.round((Math.min(...ds) - Date.now()) / 6e4);
+  return mins < 60 ? `${Math.max(mins, 1)} min` : mins < 1440 ? `${Math.round(mins / 60)} h` : `${Math.round(mins / 1440)} days`;
+}
+function encodeBackup() { try { return btoa(unescape(encodeURIComponent(JSON.stringify(state)))); } catch (e) { return ""; } }
+
+function renderCards() {
+  if (!deck.current || (deck.topic !== "All" && deck.current.t !== deck.topic)) { deck.current = nextCard(); deck.flipped = false; }
+  const counts = [1, 2, 3, 4, 5].map(b => CARDS.filter(c => (deck.topic === "All" || c.t === deck.topic) && state.cards[c.id] && state.cards[c.id].box === b).length);
+  const fresh = CARDS.filter(c => (deck.topic === "All" || c.t === deck.topic) && !state.cards[c.id]).length;
+  const c = deck.current;
+  view.innerHTML = `
+   <section class="stack">
+    <div><h2>Flashcards</h2><p class="lead">Cards you get wrong come back soon. Ones you know move up a box and come back days later.</p></div>
+    ${chips(CARD_TOPICS, deck.topic, "data-topic")}
+    <div class="boxes">${counts.map((n, i) => `<div class="box"><b>${n}</b><small>Box ${i + 1}</small></div>`).join("")}</div>
+    <p class="small muted">${fresh} new · ${dueCards().length} due now${deck.ahead ? " (studying ahead)" : ""}</p>
+    ${c ? `
+      <button class="card" id="card" aria-label="Flip card">
+        <span class="tag">${esc(c.t)}</span>
+        <span class="front">${esc(c.f)}</span>
+        ${deck.flipped ? `<span class="back">${esc(c.b)}</span>` : `<span class="small muted">Tap to reveal</span>`}
+      </button>
+      ${deck.flipped ? `<div class="grid3" style="grid-template-columns:1fr 1fr">
+        <button class="btn bad" data-ans="again">Again</button>
+        <button class="btn good" data-ans="good">Got it</button></div>` : ""}` : `
+      <div class="panel stack"><h3>All caught up</h3>
+        <p class="muted">Nothing is due${whenNext() ? `; the next card comes back in ${whenNext()}` : ""}.</p>
+        <button class="btn primary" id="ahead">Study ahead anyway</button></div>`}
+    <details class="entry" ${deck.backup ? "open" : ""} id="backup">
+      <summary><h3>Backup &amp; restore progress</h3></summary>
+      <div class="entry-body stack">
+        <p class="small muted">Progress is stored in this browser only. Copy this code somewhere safe (e.g. a note or email to yourself), then paste it here on a new phone or after clearing your browser.</p>
+        <textarea id="bk" readonly>${esc(encodeBackup())}</textarea>
+        <div class="row"><button class="btn" id="copy">Copy code</button></div>
+        <label class="label" for="restore">Restore from a code</label>
+        <textarea id="restore" placeholder="Paste a backup code"></textarea>
+        <div class="row"><button class="btn primary" id="doRestore">Restore progress</button></div>
+      </div>
+    </details>
+   </section>`;
+  view.querySelectorAll("[data-topic]").forEach(b => b.onclick = () => { deck.topic = b.dataset.topic; deck.ahead = false; deck.current = nextCard(); deck.flipped = false; renderCards(); });
+  const card = $("#card"); if (card) card.onclick = () => { deck.flipped = !deck.flipped; renderCards(); };
+  view.querySelectorAll("[data-ans]").forEach(b => b.onclick = () => {
+    const s = cardState(c);
+    if (b.dataset.ans === "good") { s.box = Math.min(5, s.box + 1); s.due = Date.now() + INTERVAL[s.box] * DAY; }
+    else { s.box = 1; s.due = Date.now() + 60e3; }
+    state.cards[c.id] = s; save();
+    deck.current = nextCard(); deck.flipped = false; renderCards();
+  });
+  const ah = $("#ahead"); if (ah) ah.onclick = () => { deck.ahead = true; deck.current = nextCard(); renderCards(); };
+  $("#backup").ontoggle = e => { deck.backup = e.target.open; };
+  $("#copy").onclick = () => {
+    const t = $("#bk");
+    navigator.clipboard && navigator.clipboard.writeText(t.value).then(() => toast("Backup code copied"), () => { t.select(); toast("Select and copy the code"); })
+      || (t.select(), toast("Select and copy the code"));
+  };
+  $("#doRestore").onclick = () => {
+    try {
+      const s = JSON.parse(decodeURIComponent(escape(atob($("#restore").value.trim()))));
+      if (!s || typeof s !== "object" || !s.cards) throw 0;
+      state = Object.assign({ oral: {}, cards: {}, quiz: { right: 0, total: 0 }, settings: {} }, s); save();
+      deck.current = null; toast("Progress restored"); renderCards();
+    } catch (e) { toast("That code didn't work. Check it was copied in full"); }
+  };
+}
+
+/* ============================================================ LIBRARY */
+
+const LIB_TOPICS = ["All", ...new Set(LIBRARY.map(x => x.t))];
+let lib = { topic: "All", q: "" };
+function renderLibrary() {
+  view.innerHTML = `
+   <section class="stack">
+    <div><h2>Reference library</h2><p class="lead">Quick-reference summaries. Search for a rule number, a light, a term.</p></div>
+    <input class="search" id="q" type="search" placeholder="Search, e.g. 'anchor', 'Rule 19', 'Q(6)'" value="${esc(lib.q)}" aria-label="Search the library">
+    ${chips(LIB_TOPICS, lib.topic, "data-topic")}
+    <div class="stack" id="entries"></div>
+   </section>`;
+  const draw = () => {
+    const term = lib.q.trim().toLowerCase();
+    const hits = LIBRARY.filter(e => (lib.topic === "All" || e.t === lib.topic) &&
+      (!term || (e.h + " " + e.b.replace(/<[^>]+>/g, " ")).toLowerCase().includes(term)));
+    $("#entries").innerHTML = hits.length ? hits.map(e => `<details class="entry" ${term ? "open" : ""}>
+        <summary><h3>${esc(e.h)}</h3></summary><div class="entry-body"><p><span class="tag">${esc(e.t)}</span></p>${e.b}</div></details>`).join("")
+      : `<p class="muted">No matches. Try a shorter word.</p>`;
+  };
+  draw();
+  $("#q").oninput = e => { lib.q = e.target.value; draw(); };
+  view.querySelectorAll("[data-topic]").forEach(b => b.onclick = () => { lib.topic = b.dataset.topic; renderLibrary(); });
+}
+
+/* ============================================================ ROUTING */
+
+const VIEWS = { oral: renderOral, lights: renderLights, cards: renderCards, library: renderLibrary };
+function route() {
+  const name = (location.hash || "").slice(1);
+  const v = VIEWS[name] ? name : "oral";
+  document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-current", t.dataset.view === v ? "page" : "false"));
+  VIEWS[v]();
+}
+document.querySelectorAll(".tab").forEach(t => t.onclick = () => {
+  if (location.hash.slice(1) === t.dataset.view) route(); else location.hash = t.dataset.view;
+  window.scrollTo({ top: 0 });
+});
+window.addEventListener("hashchange", route);
+route();
+</script>
+
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+}
+</script>
+</body>
+</html>
